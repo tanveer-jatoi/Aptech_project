@@ -48,6 +48,10 @@ $ogImage = url('assets/img/og-preview.svg');
     <!-- Master CSS Design System & Animation Engine (Linked Once Globally) -->
     <link rel="stylesheet" href="<?= url('assets/css/style.css'); ?>">
     <link rel="stylesheet" href="<?= url('assets/css/animations.css'); ?>">
+
+    <!-- Server Timestamp for Client-Side Clock Synchronization & SSL Defense -->
+    <meta name="vms-server-time" content="<?= time(); ?>">
+    <meta name="vms-server-formatted" content="<?= date('d-m-Y h:i:s A'); ?>">
 </head>
 <body>
     <!-- Accessibility Skip Link -->
@@ -55,6 +59,9 @@ $ogImage = url('assets/img/og-preview.svg');
 
     <!-- Global Role-Aware Navigation Bar -->
     <?php require_once __DIR__ . '/navbar.php'; ?>
+
+    <!-- Client Clock Skew & SSL Date-Time Validation Shield -->
+    <?php require_once __DIR__ . '/components/datetime_shield.php'; ?>
 
     <!-- Cookie Consent Banner -->
     <?php require_once __DIR__ . '/components/cookie_banner.php'; ?>

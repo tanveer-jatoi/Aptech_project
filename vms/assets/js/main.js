@@ -75,7 +75,12 @@ document.addEventListener('DOMContentLoaded', function () {
     initCookieConsent();
 
     // ------------------------------------------------------------------------
-    // 5. Prevent Duplicate Form Submissions
+    // 5. Device Date & Time Verification Shield (SSL & Medical Timing Defense)
+    // ------------------------------------------------------------------------
+    initDateTimeShield();
+
+    // ------------------------------------------------------------------------
+    // 6. Prevent Duplicate Form Submissions
     // ------------------------------------------------------------------------
     document.querySelectorAll('form').forEach(function (form) {
         form.addEventListener('submit', function (e) {
@@ -233,5 +238,75 @@ function showFormError(container, message) {
         container.style.display = 'block';
     } else {
         alert(message);
+    }
+}
+
+/**
+ * Verifies that the client's device date & time is synchronized with the server.
+ * Disallows / warns users when device clock is inaccurate, protecting SSL & appointments.
+ */
+function initDateTimeShield() {
+    const metaServerTime = document.querySelector('meta[name="vms-server-time"]');
+    const shield = document.getElementById('vms-datetime-shield');
+    if (!metaServerTime || !shield) return;
+
+    const serverSec = parseInt(metaServerTime.getAttribute('content'), 10);
+    if (!serverSec) return;
+
+    function verifyClock() {
+        const clientMs = Date.now();
+        const serverMs = serverSec * 1000;
+        const diffMinutes = Math.abs(clientMs - serverMs) / (1000 * 60);
+
+        // Tolerance: 30 minutes (allows minor clock drift, catches dead CMOS batteries, wrong dates, years)
+        if (diffMinutes > 30) {
+            shield.style.display = 'flex';
+            const clientDisplay = document.getElementById('vms-client-time-display');
+            if (clientDisplay) {
+                const now = new Date();
+                clientDisplay.textContent = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString();
+            }
+
+            // Disable sensitive submit buttons while clock is out of sync
+            document.querySelectorAll('form button[type="submit"]').forEach(function (btn) {
+                btn.setAttribute('data-clock-disabled', 'true');
+                btn.setAttribute('disabled', 'disabled');
+                btn.setAttribute('title', 'Please synchronize your device date and time to enable submission.');
+            });
+            return false;
+        } else {
+            shield.style.display = 'none';
+            // Re-enable buttons if previously disabled by clock check
+            document.querySelectorAll('button[data-clock-disabled="true"]').forEach(function (btn) {
+                btn.removeAttribute('data-clock-disabled');
+                btn.removeAttribute('disabled');
+                btn.removeAttribute('title');
+            });
+            return true;
+        }
+    }
+
+    // Run initial verification
+    verifyClock();
+
+    // Re-check button handler
+    const recheckBtn = document.getElementById('vms-recheck-clock');
+    if (recheckBtn) {
+        recheckBtn.addEventListener('click', function () {
+            const ok = verifyClock();
+            if (ok) {
+                alert('Success: Your device clock is now properly synchronized!');
+            } else {
+                alert('Your device clock is still out of sync. Please check your system date and time settings.');
+            }
+        });
+    }
+
+    // Dismiss / Read-only button
+    const dismissBtn = document.getElementById('vms-dismiss-clock-warning');
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', function () {
+            shield.style.display = 'none';
+        });
     }
 }

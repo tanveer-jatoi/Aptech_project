@@ -260,11 +260,17 @@ assertTest(
     'privacy.php verified'
 );
 
-// Verify Cookie banner
+// Verify Cookie banner and Date-Time shield
 assertTest(
     'Cookie consent banner component exists with preference controls',
     file_exists(__DIR__ . '/../vms/includes/components/cookie_banner.php'),
     'cookie_banner.php verified'
+);
+
+assertTest(
+    'Date & Time verification shield component exists',
+    file_exists(__DIR__ . '/../vms/includes/components/datetime_shield.php'),
+    'datetime_shield.php verified'
 );
 
 // Verify Favicon SVG and OG Image
@@ -334,6 +340,40 @@ foreach ($endpoints as $ep) {
             "HTTP Code: $httpCode"
         );
     }
+}
+
+// Test nonexistent URL through Apache (verifying custom 404 handler)
+if ($httpActive) {
+    $url = "http://localhost/Aptech_Project/vms/nonexistent-test-route-" . time();
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    assertTest(
+        "Nonexistent URL returns HTTP 404 with custom HTML (not raw text '404.php')",
+        $httpCode === 404 && strpos($response, 'Page Not Located') !== false,
+        "HTTP Code: $httpCode, Content snippet: " . substr(strip_tags($response), 0, 50)
+    );
+
+    // Test HTTPS connection
+    $url = "https://localhost/Aptech_Project/vms/index.php";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    assertTest(
+        "HTTPS GET index.php returns HTTP 200 over SSL",
+        $httpCode === 200,
+        "HTTPS Code: $httpCode"
+    );
 }
 
 // -------------------------------------------------------------

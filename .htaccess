@@ -1,10 +1,11 @@
+
 # =====================================================================
 # Vaccination Management System (VMS) - Workspace Root Security
 # =====================================================================
 
 Options -Indexes
 
-# Protect zip backups, git files, sql dumps, markdown, and config files
+# Protect backup and configuration files
 <FilesMatch "\.(zip|sql|env|log|bak|config|ini|sh|md|git.*)$">
     <IfModule mod_authz_core.c>
         Require all denied
@@ -15,14 +16,16 @@ Options -Indexes
     </IfModule>
 </FilesMatch>
 
-# Block access to hidden directories
+# Custom 404 Error Page
+ErrorDocument 404 /Aptech_Project/vms/404.php
+
+# Block access to hidden files and directories
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule "(^|/)\.(?!well-known)" - [F]
 
-    # Enforce HTTPS in production (non-local)
+    # Enforce HTTPS in production, not on localhost
     RewriteCond %{HTTPS} off
-    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1|::1) [NC]
+    RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1|::1)$ [NC]
     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
-

@@ -37,7 +37,7 @@ Options -Indexes
 </IfModule>
 
 # Custom 404 Error Handler
-ErrorDocument 404 404.php
+ErrorDocument 404 /Aptech_Project/vms/404.php
 
 # Browser Caching for Performance
 <IfModule mod_expires.c>
