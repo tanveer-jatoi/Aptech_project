@@ -1,0 +1,508 @@
+/**
+ * ============================================================================
+ * Vaccination Management System (VMS) - Aptech eProject
+ * File: assets/css/animations.css
+ * Description: Performant CSS Keyframes & Micro-Animations
+ * ============================================================================
+ * 
+ * SPECIFICATION COMPLIANCE:
+ * - Animates ONLY transform and opacity to prevent browser repaint/reflow layout shift.
+ * - Enforces @media (prefers-reduced-motion: reduce) to immediately render final states.
+ * - Powers the form-save success toast with animated SVG checkmark.
+ */
+
+/* ----------------------------------------------------------------------------
+ * 1. TOAST NOTIFICATION CONTAINER & CARD
+ * ------------------------------------------------------------------------- */
+.toast-container {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 9999;
+    max-width: 380px;
+    width: calc(100% - 2.5rem);
+    pointer-events: none;
+}
+
+.toast-card {
+    pointer-events: auto;
+    background: #ffffff;
+    border-radius: var(--radius-md, 10px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid var(--primary, #0284c7);
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+.toast-card.toast-success {
+    border-left-color: #10b981;
+}
+
+.toast-card.toast-danger {
+    border-left-color: #ef4444;
+}
+
+.toast-card.toast-warning {
+    border-left-color: #f59e0b;
+}
+
+.toast-card.toast-info {
+    border-left-color: #3b82f6;
+}
+
+.toast-card.is-hiding {
+    animation: toastSlideOut 0.3s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.toast-icon-wrap {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast-body {
+    flex: 1 1 auto;
+}
+
+.toast-title {
+    display: block;
+    font-size: 0.9rem;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 0.15rem;
+}
+
+.toast-message {
+    font-size: 0.82rem;
+    color: #475569;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+.toast-close:hover {
+    color: #0f172a;
+}
+
+/* ----------------------------------------------------------------------------
+ * 2. ANIMATED SVG CHECKMARK
+ * ------------------------------------------------------------------------- */
+.toast-checkmark-svg {
+    width: 34px;
+    height: 34px;
+    stroke-width: 3;
+    stroke: #10b981;
+    fill: none;
+}
+
+.toast-checkmark-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #10b981;
+    animation: strokeCircle 0.5s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.toast-checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: strokeCheck 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.35s forwards;
+}
+
+.toast-info-svg {
+    width: 28px;
+    height: 28px;
+    stroke: #ef4444;
+}
+
+/* ----------------------------------------------------------------------------
+ * 3. KEYFRAME DEFINITIONS (Transform & Opacity Only)
+ * ------------------------------------------------------------------------- */
+@keyframes toastSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastSlideOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-15px) scale(0.96);
+    }
+}
+
+@keyframes strokeCircle {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes strokeCheck {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Hero Content Reveal Keyframes */
+@keyframes heroFadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-hero-reveal {
+    animation: heroFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-hero-delay-1 {
+    animation: heroFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
+}
+
+.animate-hero-delay-2 {
+    animation: heroFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
+/* Scroll Fade In */
+.fade-in-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    will-change: opacity, transform;
+}
+
+.fade-in-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ----------------------------------------------------------------------------
+ * 4. REVIEW SHUFFLE CAROUSEL (Stacked Testimonial Cards)
+ * ------------------------------------------------------------------------- */
+.review-carousel-wrap {
+    position: relative;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1.5rem 0.5rem;
+}
+
+.review-card-stack {
+    position: relative;
+    min-height: 230px;
+}
+
+.review-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: var(--radius-lg, 16px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    padding: 1.75rem 2rem;
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.review-slide.is-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    z-index: 5;
+}
+
+.review-stars {
+    color: #f59e0b;
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+}
+
+.review-comment {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #1e293b;
+    font-style: italic;
+    margin-bottom: 1.25rem;
+}
+
+.review-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.review-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary, #0284c7), var(--teal, #0d9488));
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.review-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.carousel-btn {
+    background: #ffffff;
+    border: 1px solid var(--border-color, #e2e8f0);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-main, #0f172a);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.carousel-btn:hover {
+    background-color: var(--bg-subtle, #f1f5f9);
+    border-color: var(--primary, #0284c7);
+}
+
+.carousel-indicators {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.carousel-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-dot.is-active {
+    background-color: var(--primary, #0284c7);
+    transform: scale(1.25);
+}
+
+/* ----------------------------------------------------------------------------
+ * 5. PROCESS STEPS CONNECTOR LINE
+ * ------------------------------------------------------------------------- */
+.process-steps-container {
+    position: relative;
+    margin: 2.5rem 0;
+}
+
+.process-steps-track {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+}
+
+@media (min-width: 768px) {
+    .process-steps-track {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .process-steps-track::before {
+        content: "";
+        position: absolute;
+        top: 24px;
+        left: 30px;
+        right: 30px;
+        height: 3px;
+        background: #e2e8f0;
+        z-index: 1;
+    }
+}
+
+.process-step-item {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.process-step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid var(--primary, #0284c7);
+    color: var(--primary, #0284c7);
+    font-weight: 800;
+    font-size: 1.15rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.process-step-item:hover .process-step-circle {
+    transform: translateY(-3px);
+    background: var(--primary, #0284c7);
+    color: #ffffff;
+}
+
+.process-step-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.process-step-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* ----------------------------------------------------------------------------
+ * 6. HERO SECTION AESTHETICS
+ * ------------------------------------------------------------------------- */
+.hero-wrapper {
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    border-bottom: 1px solid #e0f2fe;
+    padding: 3.5rem 0 3rem;
+    text-align: center;
+}
+
+.hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+}
+
+.hero-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 820px;
+    margin: 0 auto 1rem;
+}
+
+@media (min-width: 768px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: #475569;
+    max-width: 650px;
+    margin: 0 auto 1.75rem;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* ----------------------------------------------------------------------------
+ * 7. ACCESSIBILITY: PREFERS-REDUCED-MOTION
+ * When reduced motion is requested by the OS/user, immediately display
+ * the final, static resting state with zero transition delays or transforms.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+
+    .toast-card {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .toast-checkmark-circle,
+    .toast-checkmark-check {
+        animation: none !important;
+        stroke-dashoffset: 0 !important;
+    }
+
+    .fade-in-on-scroll {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    .review-slide {
+        transition: none !important;
+    }
+
+    .process-step-circle {
+        transition: none !important;
+    }
+}
+

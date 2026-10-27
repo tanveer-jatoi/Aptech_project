@@ -1,0 +1,26 @@
+# =====================================================================
+# Vaccination Management System (VMS) - Security .htaccess
+# =====================================================================
+
+# Disable Directory Browsing
+Options -Indexes
+
+# Protect Sensitive Configuration, Database and Metadata Files
+<FilesMatch "\.(sql|env|log|bak|config|ini|sh|md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Block access to hidden files and folders (e.g. .git, .env)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule "(^|/)\.(?!well-known)" - [F]
+</IfModule>
+
+# Set Character Encoding to UTF-8
+AddDefaultCharset UTF-8
