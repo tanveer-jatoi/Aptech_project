@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) {
                 $pdo->rollBack();
                 error_log('[ADD HOSPITAL ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error creating hospital facility: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while creating the hospital facility. Please try again.';
             }
         }
     }
@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) {
                 $pdo->rollBack();
                 error_log('[UPDATE HOSPITAL ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error updating hospital: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while updating the hospital facility. Please try again.';
             }
         }
     }
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } catch (PDOException $e) {
                 error_log('[DELETE HOSPITAL ERROR] ' . $e->getMessage());
-                setFlash('danger', 'Failed to delete hospital: ' . $e->getMessage());
+                setFlash('danger', 'Failed to remove hospital facility due to existing database dependencies.');
             }
         }
         header('Location: ' . url('admin/hospitals.php'));
@@ -296,19 +296,19 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="name" class="form-label required">Hospital / Center Name</label>
-                        <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Westside Pediatrics Center" required>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Shaukat Khanum Pediatric Wing" required>
                     </div>
 
                     <div class="form-group">
                         <label for="email" class="form-label required">Official Contact Email (Login)</label>
-                        <input type="email" id="email" name="email" class="form-control" placeholder="center@hospital.org" required>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="center@hospital.org.pk" required>
                     </div>
                 </div>
 
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="phone" class="form-label required">Hotline Phone</label>
-                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="+1-555-0199" required>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. 021-34567890 or 0300-1234567" required>
                     </div>
 
                     <div class="form-group">
@@ -320,12 +320,12 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="city" class="form-label required">City</label>
-                        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Metropolis" required>
+                        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Karachi" required>
                     </div>
 
                     <div class="form-group">
                         <label for="location" class="form-label required">District / Area Landmark</label>
-                        <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Central Avenue, Block 2" required>
+                        <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Gulshan-e-Iqbal, Block 13" required>
                     </div>
                 </div>
 
@@ -463,11 +463,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 <tr>
                                     <td>
                                         <strong><?= e($h['name']); ?></strong><br>
-                                        <small style="color: var(--text-muted);">&#128205; <?= e($h['location']); ?></small><br>
+                                        <small style="color: var(--text-muted);"><?= e($h['location']); ?></small><br>
                                         <small style="color: var(--text-light);"><?= e($h['address']); ?></small>
                                     </td>
                                     <td>
-                                        <span>&#128222; <?= e($h['phone']); ?></span><br>
+                                        <span><?= e($h['phone']); ?></span><br>
                                         <small style="color: var(--text-muted);">&#9993; <?= e($h['email']); ?></small>
                                     </td>
                                     <td><strong><?= e($h['city']); ?></strong></td>
@@ -492,7 +492,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             <input type="hidden" name="hospital_id" value="<?= (int)$h['id']; ?>">
                                             <button type="submit" class="btn btn-danger btn-sm" title="Delete or Deactivate" 
                                                     onclick="return confirm('Are you sure you want to delete or deactivate <?= e($h['name']); ?>?');">
-                                                &#128465;
+                                                Delete
                                             </button>
                                         </form>
                                     </td>

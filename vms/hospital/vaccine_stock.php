@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', $vName . ' status updated to "' . ucfirst($newStatus) . '" at your facility!');
             } catch (PDOException $e) {
                 error_log('[VACCINE STOCK TOGGLE ERROR] ' . $e->getMessage());
-                setFlash('danger', 'Failed to update stock: ' . $e->getMessage());
+                setFlash('danger', 'Failed to update vaccine inventory stock. Please try again.');
             }
         }
     }
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('success', 'All catalog vaccines have been marked as "' . ucfirst($bulkStatus) . '".');
         } catch (PDOException $e) {
             error_log('[BULK STOCK ERROR] ' . $e->getMessage());
-            setFlash('danger', 'Bulk update failed: ' . $e->getMessage());
+            setFlash('danger', 'Bulk inventory update failed. Please try again.');
         }
     }
 
@@ -230,7 +230,7 @@ require_once __DIR__ . '/../includes/header.php';
                             </td>
                             <td>
                                 <small style="color: var(--text-muted);">
-                                    <?= !empty($v['stock_updated_at']) ? formatDate($v['stock_updated_at'], 'M d, Y') : 'Default'; ?>
+                                    <?= !empty($v['stock_updated_at']) ? formatDate($v['stock_updated_at'], 'd-m-Y') : 'Default'; ?>
                                 </small>
                             </td>
                             <td style="text-align: right; white-space: nowrap;">

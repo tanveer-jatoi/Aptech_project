@@ -157,8 +157,8 @@ require_once __DIR__ . '/../includes/header.php';
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                <span class="badge badge-info">&#128106; Parent Portal</span>
-                <span style="font-size: 0.85rem; color: var(--text-muted);">&#128197; <?= date('l, F j, Y'); ?></span>
+                <span class="badge badge-info">Parent Portal</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"><?= date('l, F j, Y'); ?></span>
             </div>
             <h1>Welcome, <?= e(currentUserName()); ?>!</h1>
             <p style="margin: 0;">Stay on top of your children's vital immunization milestones and book clinic slots.</p>
@@ -169,7 +169,7 @@ require_once __DIR__ . '/../includes/header.php';
                 &#10010; Book Vaccine Slot
             </a>
             <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-outline">
-                &#128102; Register Child
+                Register Child
             </a>
         </div>
     </div>
@@ -203,7 +203,7 @@ require_once __DIR__ . '/../includes/header.php';
             <?php foreach ($upcomingAlerts as $ua): ?>
                 <div class="alert alert-warning" style="margin-bottom: 0.75rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 1.5rem;">&#128197;</span>
+                        <span style="font-size: 1.5rem;"></span>
                         <div>
                             <strong>Upcoming Milestone: <?= e($ua['child_name']); ?> &bull; <?= e($ua['vaccine_name']); ?></strong><br>
                             <span style="font-size: 0.85rem;">
@@ -232,7 +232,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small><a href="<?= url('parent/children.php'); ?>">Manage children &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
-                &#128102;
+                
             </div>
         </div>
 
@@ -282,7 +282,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 1.6rem;">&#128102;</span>
+                                <span style="font-size: 1.6rem;"></span>
                                 <div>
                                     <h4 style="margin: 0; font-size: 1.15rem;"><?= e($c['name']); ?></h4>
                                     <small style="color: var(--text-muted);"><?= ucfirst($c['gender']); ?> &bull; Blood Group: <strong><?= e($c['blood_group']); ?></strong></small>
@@ -297,10 +297,10 @@ require_once __DIR__ . '/../includes/header.php';
 
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <a href="<?= url('parent/book.php?child_id=' . (int)$c['id']); ?>" class="btn btn-primary btn-sm">
-                                &#128137; Book Vaccine
+                                Book Vaccine
                             </a>
                             <a href="<?= url('parent/reports.php?child_id=' . (int)$c['id']); ?>" class="btn btn-outline btn-sm">
-                                &#128203; View History
+                                View History
                             </a>
                             <a href="<?= url('parent/children.php?action=edit&id=' . (int)$c['id']); ?>" class="btn btn-outline btn-sm">
                                 &#9998; Edit
@@ -349,11 +349,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td><span class="badge badge-info"><?= e($b['vaccine_name']); ?></span></td>
                                 <td>
                                     <strong><?= e($b['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($b['hospital_city']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['hospital_city']); ?></small>
                                 </td>
                                 <td>
                                     <strong><?= formatDate($b['preferred_date']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($b['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['time_slot']); ?></small>
                                 </td>
                                 <td>
                                     <?php if ($b['admin_status'] === 'approved'): ?>

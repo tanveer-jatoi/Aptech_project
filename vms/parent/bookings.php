@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (PDOException $e) {
             error_log('[CANCEL BOOKING ERROR] ' . $e->getMessage());
-            setFlash('danger', 'Failed to cancel appointment: ' . $e->getMessage());
+            setFlash('danger', 'A database error occurred while cancelling the appointment. Please try again.');
         }
     }
     header('Location: ' . url('parent/bookings.php'));
@@ -101,7 +101,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card">
         <?php if (empty($bookings)): ?>
             <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">&#128197;</span>
+                <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;"></span>
                 <h3>No Appointments Booked Yet</h3>
                 <p style="max-width: 450px; margin: 0 auto 1.25rem;">
                     You have not submitted any vaccination requests. Schedule a slot at an authorized pediatric hospital to ensure your child remains protected.
@@ -132,12 +132,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td><span class="badge badge-info"><?= e($b['vaccine_name']); ?></span></td>
                                 <td>
                                     <strong><?= e($b['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($b['hospital_location']); ?>, <?= e($b['hospital_city']); ?></small><br>
-                                    <small style="color: var(--text-light);">&#128222; <?= e($b['hospital_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['hospital_location']); ?>, <?= e($b['hospital_city']); ?></small><br>
+                                    <small style="color: var(--text-light);"><?= e($b['hospital_phone']); ?></small>
                                 </td>
                                 <td>
                                     <strong><?= formatDate($b['preferred_date']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($b['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['time_slot']); ?></small>
                                 </td>
                                 <td>
                                     <?php if ($b['admin_status'] === 'approved'): ?>
@@ -165,7 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td style="text-align: right; white-space: nowrap;">
                                     <?php if ($b['vaccination_status'] === 'vaccinated'): ?>
                                         <a href="<?= url('parent/reports.php?child_id=' . (int)$b['child_id']); ?>" class="btn btn-outline btn-sm">
-                                            &#128203; Record
+                                            Record
                                         </a>
                                     <?php elseif ($b['admin_status'] === 'pending'): ?>
                                         <form action="<?= url('parent/bookings.php'); ?>" method="POST" style="display: inline-block;">

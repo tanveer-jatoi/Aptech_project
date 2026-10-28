@@ -102,7 +102,7 @@ require_once __DIR__ . '/includes/header.php';
                 <article class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                            <span class="badge badge-info">&#128205; <?= e($h['city']); ?></span>
+                            <span class="badge badge-info"><?= e($h['city']); ?></span>
                             <span class="badge badge-success">&#10004; Verified Center</span>
                         </div>
                         <h3 style="font-size: 1.25rem; margin-bottom: 0.35rem; color: var(--text-main);"><?= e($h['name']); ?></h3>
@@ -116,7 +116,7 @@ require_once __DIR__ . '/includes/header.php';
 
                     <div style="border-top: 1px solid var(--border-color); padding-top: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
                         <small style="color: var(--text-muted); font-weight: 600;">
-                            &#128222; <?= e($h['phone']); ?>
+                            <?= e($h['phone']); ?>
                         </small>
                         <a href="<?= url('login.php'); ?>" class="btn btn-primary btn-sm">
                             Book Slot &rarr;

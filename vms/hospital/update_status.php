@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 error_log('[UPDATE STATUS ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error updating status: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while updating the vaccination record. Please try again.';
             }
         }
     }
@@ -151,21 +151,21 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card" style="margin-bottom: 1.5rem; background: var(--bg-subtle);">
             <div class="grid grid-2" style="gap: 1.5rem;">
                 <div>
-                    <h4 style="color: var(--primary-dark); margin-bottom: 0.5rem;">&#128102; Child Patient</h4>
+                    <h4 style="color: var(--primary-dark); margin-bottom: 0.5rem;">Child Patient</h4>
                     <p style="margin: 0; line-height: 1.7; font-size: 0.92rem;">
                         <strong>Name:</strong> <?= e($booking['child_name']); ?><br>
                         <strong>Date of Birth:</strong> <?= formatDate($booking['child_dob']); ?> (<?= formatAge($booking['child_dob']); ?> old)<br>
                         <strong>Gender / Blood:</strong> <?= ucfirst($booking['child_gender']); ?> &bull; <span class="badge badge-info"><?= e($booking['blood_group']); ?></span><br>
-                        <strong>Parent:</strong> <?= e($booking['parent_name']); ?> (&#128222; <?= e($booking['parent_phone']); ?>)
+                        <strong>Parent:</strong> <?= e($booking['parent_name']); ?> (<?= e($booking['parent_phone']); ?>)
                     </p>
                 </div>
 
                 <div>
-                    <h4 style="color: var(--primary-dark); margin-bottom: 0.5rem;">&#128137; Vaccine & Slot</h4>
+                    <h4 style="color: var(--primary-dark); margin-bottom: 0.5rem;">Vaccine & Slot</h4>
                     <p style="margin: 0; line-height: 1.7; font-size: 0.92rem;">
                         <strong>Vaccine:</strong> <span class="badge badge-info" style="font-size: 0.85rem;"><?= e($booking['vaccine_name']); ?></span><br>
                         <strong>Scheduled Date:</strong> <?= formatDate($booking['preferred_date']); ?><br>
-                        <strong>Time Slot:</strong> &#128337; <?= e($booking['time_slot']); ?><br>
+                        <strong>Time Slot:</strong> <?= e($booking['time_slot']); ?><br>
                         <strong>Current Status:</strong> <span class="badge badge-warning"><?= ucfirst($booking['vaccination_status']); ?></span>
                     </p>
                 </div>

@@ -183,7 +183,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <button type="button" class="btn btn-primary" onclick="window.print()">
-                &#128438; Print / Save as PDF
+                Print / Save as PDF
             </button>
         </div>
     </div>
@@ -192,11 +192,11 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="form-tabs no-print" style="max-width: 550px; margin-bottom: 2rem;">
         <a href="<?= url('admin/reports.php?tab=child'); ?>" 
            class="form-tab-btn <?= $activeTab === 'child' ? 'is-active' : ''; ?>" style="text-decoration: none;">
-            &#128102; Per-Child Certificate
+            Per-Child Certificate
         </a>
         <a href="<?= url('admin/reports.php?tab=date'); ?>" 
            class="form-tab-btn <?= $activeTab === 'date' ? 'is-active' : ''; ?>" style="text-decoration: none;">
-            &#128197; Date-Wise Analytics
+            Date-Wise Analytics
         </a>
     </div>
 
@@ -240,7 +240,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- Child & Parent Demographic Summary -->
                 <div class="grid grid-2" style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
                     <div>
-                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">&#128102; Child Information</h4>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">Child Information</h4>
                         <table style="width: 100%; font-size: 0.9rem; line-height: 1.8;">
                             <tr><td style="width: 120px; color: var(--text-muted);">Full Name:</td><td><strong><?= e($childData['name']); ?></strong></td></tr>
                             <tr><td style="color: var(--text-muted);">Date of Birth:</td><td><?= formatDate($childData['dob']); ?></td></tr>
@@ -250,7 +250,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
-                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">&#128106; Guardian Information</h4>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">Guardian Information</h4>
                         <table style="width: 100%; font-size: 0.9rem; line-height: 1.8;">
                             <tr><td style="width: 120px; color: var(--text-muted);">Parent Name:</td><td><strong><?= e($childData['parent_name']); ?></strong></td></tr>
                             <tr><td style="color: var(--text-muted);">Contact Phone:</td><td><?= e($childData['parent_phone']); ?></td></tr>
@@ -294,7 +294,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php if ($isCompleted): ?>
                                             <span class="badge badge-success">&#10004; Administered</span>
                                         <?php elseif ($isScheduled): ?>
-                                            <span class="badge badge-info">&#128197; Scheduled</span>
+                                            <span class="badge badge-info">Scheduled</span>
                                         <?php elseif ($isOverdue): ?>
                                             <span class="badge badge-danger">&#9888; Overdue</span>
                                         <?php else: ?>
@@ -453,7 +453,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     </td>
                                     <td>
                                         <?= e($row['parent_name']); ?><br>
-                                        <small style="color: var(--text-muted);">&#128222; <?= e($row['parent_phone']); ?></small>
+                                        <small style="color: var(--text-muted);"><?= e($row['parent_phone']); ?></small>
                                     </td>
                                     <td><span class="badge badge-info"><?= e($row['vaccine_name']); ?></span></td>
                                     <td><?= e($row['hospital_name']); ?></td>
@@ -467,7 +467,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?= formatDate($row['vaccinated_on'], 'M d, Y h:i A'); ?>
+                                        <?= formatDate($row['vaccinated_on'], 'd-m-Y h:i A'); ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -3,13 +3,18 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: includes/functions.php
- * Description: Core Utility & Security Helper Functions
+ * Description: Core Utility, Localization & Security Helper Functions
  * ============================================================================
  */
 
 // Prevent direct HTTP access
 if (!defined('VMS_APP')) {
     define('VMS_APP', true);
+}
+
+// Ensure default Pakistan timezone is active
+if (date_default_timezone_get() !== 'Asia/Karachi') {
+    date_default_timezone_set('Asia/Karachi');
 }
 
 // ----------------------------------------------------------------------------
@@ -64,7 +69,6 @@ function sanitizeInput($data): string
     if (!is_string($data)) {
         return '';
     }
-    // Remove null bytes and trim outer whitespace
     return trim(str_replace(chr(0), '', $data));
 }
 
@@ -113,13 +117,101 @@ function verifyCSRFToken(?string $token): bool
 }
 
 /**
- * Safely formats a database date or datetime string for display.
+ * Renders an invisible honeypot input field for anti-bot / anti-spam protection.
+ *
+ * @param string $fieldName Field name for honeypot
+ * @return string HTML honeypot field
+ */
+function honeypotField(string $fieldName = 'website_hp'): string
+{
+    return '<div style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">'
+         . '<label for="' . e($fieldName) . '">Leave this field blank</label>'
+         . '<input type="text" id="' . e($fieldName) . '" name="' . e($fieldName) . '" tabindex="-1" autocomplete="off" value="">'
+         . '</div>';
+}
+
+/**
+ * Verifies that the honeypot field was left blank by human visitors.
+ *
+ * @param string $fieldName Field name for honeypot
+ * @return bool True if safe (blank), false if filled by spam bot
+ */
+function verifyHoneypot(string $fieldName = 'website_hp'): bool
+{
+    return empty($_POST[$fieldName]);
+}
+
+/**
+ * Checks session-based rate limits for sensitive actions (e.g. login, contact submissions).
+ *
+ * @param string $key Identifier e.g. 'login_attempt_' . $ip
+ * @param int $maxAttempts Maximum allowed attempts in window
+ * @param int $decaySeconds Window duration in seconds
+ * @return array ['allowed' => bool, 'remaining' => int, 'retry_after' => int]
+ */
+function checkRateLimit(string $key, int $maxAttempts = 5, int $decaySeconds = 300): array
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $now = time();
+    $bucket = $_SESSION['rate_limits'][$key] ?? ['attempts' => 0, 'first_attempt' => $now];
+
+    // Reset window if decay elapsed
+    if ($now - $bucket['first_attempt'] > $decaySeconds) {
+        $bucket = ['attempts' => 0, 'first_attempt' => $now];
+    }
+
+    $allowed = $bucket['attempts'] < $maxAttempts;
+    $remaining = max(0, $maxAttempts - $bucket['attempts']);
+    $retryAfter = max(1, ($bucket['first_attempt'] + $decaySeconds) - $now);
+
+    return [
+        'allowed'     => $allowed,
+        'remaining'   => $remaining,
+        'retry_after' => $retryAfter,
+    ];
+}
+
+/**
+ * Records an attempt for a rate-limited key.
+ *
+ * @param string $key Identifier
+ */
+function recordRateLimitAttempt(string $key): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $now = time();
+    if (!isset($_SESSION['rate_limits'][$key]) || ($now - $_SESSION['rate_limits'][$key]['first_attempt'] > 300)) {
+        $_SESSION['rate_limits'][$key] = ['attempts' => 1, 'first_attempt' => $now];
+    } else {
+        $_SESSION['rate_limits'][$key]['attempts']++;
+    }
+}
+
+/**
+ * Clears rate limiting attempts on successful action.
+ *
+ * @param string $key Identifier
+ */
+function clearRateLimit(string $key): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    unset($_SESSION['rate_limits'][$key]);
+}
+
+/**
+ * Safely formats a database date or datetime string for display (Defaults to DD-MM-YYYY for Pakistan).
  *
  * @param string|null $dateString Date or datetime string
- * @param string $format Target PHP date format (default: 'M d, Y')
+ * @param string $format Target PHP date format (default: 'd-m-Y')
  * @return string Formatted date or fallback text
  */
-function formatDate(?string $dateString, string $format = 'M d, Y'): string
+function formatDate(?string $dateString, string $format = 'd-m-Y'): string
 {
     if (empty($dateString) || $dateString === '0000-00-00' || $dateString === '0000-00-00 00:00:00') {
         return 'N/A';
@@ -129,6 +221,63 @@ function formatDate(?string $dateString, string $format = 'M d, Y'): string
         return 'Invalid Date';
     }
     return date($format, $timestamp);
+}
+
+/**
+ * Formats a currency amount in Pakistani Rupees (PKR).
+ *
+ * @param float|int|string|null $amount Numeric amount
+ * @param bool $useRsPrefix Whether to prefix with Rs. instead of PKR
+ * @return string Formatted currency string (e.g. 'PKR 2,500' or 'Rs. 2,500')
+ */
+function formatPKR($amount, bool $useRsPrefix = true): string
+{
+    $num = (float)($amount ?? 0);
+    $prefix = $useRsPrefix ? 'Rs. ' : 'PKR ';
+    return $prefix . number_format($num, 0);
+}
+
+/**
+ * Validates whether a given phone number follows realistic Pakistani phone formats (+92 or 03xx).
+ *
+ * @param string $phone
+ * @return bool True if valid, false otherwise
+ */
+function isValidPakistaniPhone(string $phone): bool
+{
+    // Clean spaces, hyphens, and parentheses
+    $clean = preg_replace('/[\s\-\(\)]/', '', $phone);
+    // Patterns supported:
+    // +923001234567 / 00923001234567 / 03001234567 (Mobile)
+    // +922134567890 / 02134567890 (Landline)
+    return (bool)preg_match('/^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[0-9]{7,8}$/', $clean);
+}
+
+/**
+ * Returns a canonical list of major Pakistani cities for dropdowns and filters.
+ *
+ * @return array List of cities
+ */
+function pakistaniCities(): array
+{
+    return [
+        'Karachi',
+        'Lahore',
+        'Islamabad',
+        'Rawalpindi',
+        'Faisalabad',
+        'Multan',
+        'Peshawar',
+        'Quetta',
+        'Hyderabad',
+        'Gujranwala',
+        'Sialkot',
+        'Bahawalpur',
+        'Sargodha',
+        'Sukkur',
+        'Larkana',
+        'Abbottabad',
+    ];
 }
 
 /**

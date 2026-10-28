@@ -21,6 +21,7 @@ if (!defined('VMS_APP')) {
 function renderVaccinesGrid(array $vaccines, bool $animateOnScroll = false): void
 {
     $animClass = $animateOnScroll ? 'fade-in-on-scroll' : '';
+    $actionUrl = isLoggedIn() && currentRole() === 'parent' ? url('parent/book.php') : url('register.php');
     ?>
     <div class="grid grid-3" style="gap: 1.25rem;">
         <?php foreach ($vaccines as $v): 
@@ -33,7 +34,7 @@ function renderVaccinesGrid(array $vaccines, bool $animateOnScroll = false): voi
             <article class="card <?= $animClass; ?>" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <span class="badge badge-info">&#128137; Target: <?= $ageDisplay; ?></span>
+                        <span class="badge badge-info">Target: <?= $ageDisplay; ?></span>
                         <?php if ($isAvail): ?>
                             <span class="badge badge-success">&#10004; Available</span>
                         <?php else: ?>
@@ -50,7 +51,7 @@ function renderVaccinesGrid(array $vaccines, bool $animateOnScroll = false): voi
                     <small style="color: var(--text-muted);">
                         <strong><?= (int)$v['doses']; ?></strong> <?= (int)$v['doses'] === 1 ? 'dose' : 'doses'; ?> in series
                     </small>
-                    <a href="<?= url('register.php'); ?>" class="btn btn-outline btn-sm">
+                    <a href="<?= $actionUrl; ?>" class="btn btn-outline btn-sm">
                         Schedule &rarr;
                     </a>
                 </div>
@@ -70,13 +71,14 @@ function renderVaccinesGrid(array $vaccines, bool $animateOnScroll = false): voi
 function renderHospitalsGrid(array $hospitals, bool $animateOnScroll = false): void
 {
     $animClass = $animateOnScroll ? 'fade-in-on-scroll' : '';
+    $actionUrl = isLoggedIn() && currentRole() === 'parent' ? url('parent/book.php') : url('register.php');
     ?>
     <div class="grid grid-3" style="gap: 1.25rem;">
         <?php foreach ($hospitals as $h): ?>
             <article class="card <?= $animClass; ?>" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <span class="badge badge-info">&#128205; <?= htmlspecialchars($h['city'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="badge badge-info"><?= htmlspecialchars($h['city'], ENT_QUOTES, 'UTF-8'); ?></span>
                         <span class="badge badge-success">&#10004; Verified Center</span>
                     </div>
                     <h3 style="font-size: 1.2rem; margin-bottom: 0.35rem; color: var(--text-main);"><?= htmlspecialchars($h['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
@@ -90,9 +92,9 @@ function renderHospitalsGrid(array $hospitals, bool $animateOnScroll = false): v
 
                 <div style="border-top: 1px solid var(--border-color); padding-top: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
                     <small style="color: var(--text-muted); font-weight: 600;">
-                        &#128222; <?= htmlspecialchars($h['phone'], ENT_QUOTES, 'UTF-8'); ?>
+                        <?= htmlspecialchars($h['phone'], ENT_QUOTES, 'UTF-8'); ?>
                     </small>
-                    <a href="<?= url('register.php'); ?>" class="btn btn-primary btn-sm">
+                    <a href="<?= $actionUrl; ?>" class="btn btn-primary btn-sm">
                         Book Slot &rarr;
                     </a>
                 </div>

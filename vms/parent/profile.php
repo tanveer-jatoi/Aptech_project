@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validations
     if (empty($name))    $errors[] = 'Full name is required.';
     if (empty($phone))   $errors[] = 'Contact phone number is required.';
+    elseif (!isValidPakistaniPhone($phone)) $errors[] = 'Please enter a valid Pakistani phone number (e.g. 0300-1234567 or +92 300 1234567).';
     if (empty($address)) $errors[] = 'Residential address is required.';
 
     // Password change validation if attempted
@@ -115,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             $pdo->rollBack();
             error_log('[PARENT PROFILE UPDATE ERROR] ' . $e->getMessage());
-            $errors[] = 'Database error saving profile: ' . $e->getMessage();
+            $errors[] = 'A database error occurred while saving profile details. Please try again.';
         }
     }
 }
@@ -174,7 +175,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="form-group">
                         <label for="phone" class="form-label required">Primary Contact Phone</label>
                         <input type="tel" id="phone" name="phone" class="form-control" 
-                               placeholder="+1-555-0101" 
+                               placeholder="0300-1234567" 
                                value="<?= e($_POST['phone'] ?? $profile['phone']); ?>" required>
                         <small class="form-hint">Hospitals contact you at this number</small>
                     </div>

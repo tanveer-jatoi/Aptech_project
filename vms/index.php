@@ -5,11 +5,6 @@
  * File: index.php
  * Description: Public Homepage & Healthcare Immunization Landing Portal
  * ============================================================================
- * 
- * ANIMATION INTEGRATION (Max 3 on page):
- * 1. Hero reveal (name, tagline, CTA button sliding/fading in on load).
- * 2. Live Count-up stats (Registered Hospitals, Children Registered, Vaccinations Completed).
- * 3. Parent review shuffle carousel (auto-rotates, pause on hover/focus).
  */
 
 define('VMS_APP', true);
@@ -37,15 +32,15 @@ try {
 $vacStmt = $pdo->query('SELECT * FROM vaccines WHERE status = "available" ORDER BY recommended_age_days ASC LIMIT 6');
 $featuredVaccines = $vacStmt->fetchAll();
 
-$pageTitle = 'Home | Child Vaccination Management System';
-$pageDescription = 'Protecting child health through automated vaccination schedules, hospital booking, and verified records.';
+$pageTitle = 'Child Vaccination Management System Pakistan';
+$pageDescription = 'Protecting child health across Pakistan through automated vaccination schedules, hospital booking, and verified records.';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- 1. ANIMATION COMPONENT: HERO REVEAL -->
+<!-- 1. HERO SECTION -->
 <?php require_once __DIR__ . '/includes/components/hero.php'; ?>
 
-<!-- 2. ANIMATION COMPONENT: REAL DATABASE COUNT-UP STATISTICS -->
+<!-- 2. REAL DATABASE COUNT-UP STATISTICS -->
 <section style="background: #ffffff; border-bottom: 1px solid var(--border-color); padding: 2.5rem 0;" aria-label="National System Statistics">
     <div class="container">
         <div style="text-align: center; margin-bottom: 1.75rem;">
@@ -54,9 +49,9 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="grid grid-3" style="gap: 1.5rem;">
-            <?php count_up($statHospitals, 'Participating Hospitals', '&#127973;', 'Active accredited pediatric centers'); ?>
-            <?php count_up($statChildren, 'Children Protected', '&#128102;', 'Registered on national schedule'); ?>
-            <?php count_up($statCompleted, 'Vaccinations Completed', '&#10004;', 'Clinical doses administered & verified'); ?>
+            <?php count_up($statHospitals, 'Participating Hospitals', '', 'Active accredited pediatric centers'); ?>
+            <?php count_up($statChildren, 'Children Protected', '', 'Registered on national schedule'); ?>
+            <?php count_up($statCompleted, 'Vaccinations Completed', '', 'Clinical doses administered &amp; verified'); ?>
         </div>
     </div>
 </section>
@@ -73,7 +68,7 @@ require_once __DIR__ . '/includes/header.php';
             <div>
                 <span class="badge badge-info" style="margin-bottom: 0.5rem;">Recommended Schedule</span>
                 <h2 style="font-size: 1.75rem; margin: 0;">Essential Childhood Vaccines</h2>
-                <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Key immunizations recommended by pediatric health authorities from birth onward.</p>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Key immunizations recommended by pediatric health authorities in Pakistan from birth onward.</p>
             </div>
             <a href="<?= url('vaccines.php'); ?>" class="btn btn-outline">
                 View Full Vaccine Catalog &rarr;
@@ -84,30 +79,30 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 5. ANIMATION COMPONENT: PARENT REVIEW SHUFFLE CAROUSEL -->
-<div class="container" style="padding-top: 3.5rem; padding-bottom: 2rem;">
+<!-- 5. VERIFIED PARENT FEEDBACK / HEALTHCARE ASSURANCE -->
+<div class="container" style="padding-top: 3.5rem; padding-bottom: 2.5rem;">
     <?php require_once __DIR__ . '/includes/components/review_shuffle.php'; ?>
 </div>
 
-<!-- 6. CALL TO ACTION BANNER -->
-<section style="background: linear-gradient(135deg, var(--primary-dark), #0f172a); color: #ffffff; padding: 4rem 1rem; text-align: center; margin-top: 2rem;" aria-label="Call to Action">
+<!-- 6. CALL TO ACTION BANNER (Solid Dark Neutral, Outlined Accessible Buttons, Strictly Zero Gradients) -->
+<section style="background-color: #0f172a; color: #ffffff; padding: 4rem 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid #1e293b;" aria-label="Call to Action">
     <div class="container">
         <h2 style="color: #ffffff; font-size: 2.2rem; margin-bottom: 1rem;">
             Never Miss Another Child Vaccination Date
         </h2>
-        <p style="max-width: 650px; margin: 0 auto 2rem; color: #cbd5e1; font-size: 1.1rem; line-height: 1.6;">
+        <p style="max-width: 650px; margin: 0 auto 2rem; color: #cbd5e1; font-size: 1.05rem; line-height: 1.6;">
             Create your parent profile today, add your newborn or toddler, and let our automated immunization engine keep your family safe and up to date.
         </p>
-        <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="display: flex; justify-content: center; gap: 0.85rem; flex-wrap: wrap;">
             <?php if (isLoggedIn()): ?>
-                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-outline-light" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
                     Go to Your Portal Dashboard &rarr;
                 </a>
             <?php else: ?>
-                <a href="<?= url('register.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                <a href="<?= url('register.php'); ?>" class="btn btn-outline-light" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
                     Create Free Parent Account
                 </a>
-                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 1rem; color: #ffffff; border-color: #64748b;">
+                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 1rem; color: #cbd5e1; border-color: #475569;">
                     Browse Vaccination Centers
                 </a>
             <?php endif; ?>

@@ -3,7 +3,7 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: login.php
- * Description: Unified Portal Login (Parent, Hospital, Admin)
+ * Description: Unified Portal Login (Parent, Hospital, Admin) with Rate Limiting
  * ============================================================================
  */
 
@@ -20,27 +20,32 @@ if (isLoggedIn()) {
 }
 
 $pageTitle = 'Sign In to Your Account';
-$pageDescription = 'Sign in to access your child vaccination records or hospital appointment queue.';
+$pageDescription = 'Sign in to access your child vaccination records or hospital appointment queue in Pakistan.';
 $errorMessage = '';
 $submittedEmail = '';
 
 // Handle POST authentication request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. Enforce CSRF token verification
-    $token = $_POST['csrf_token'] ?? '';
-    if (!verifyCSRFToken($token)) {
+    // 1. Rate Limiting Check (Max 5 attempts per 5 minutes per IP)
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateLimit = checkRateLimit('login_' . $clientIp, 5, 300);
+
+    if (!$rateLimit['allowed']) {
+        $errorMessage = 'Too many failed sign-in attempts. Please wait ' . ceil($rateLimit['retry_after'] / 60) . ' minutes before trying again.';
+    }
+    // 2. Enforce CSRF token verification
+    elseif (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $errorMessage = 'Security validation failed (Invalid CSRF token). Please try again.';
     } else {
         $submittedEmail = sanitizeInput($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        // 2. Validate input constraints
+        // 3. Validate input constraints
         if (empty($submittedEmail) || empty($password)) {
             $errorMessage = 'Please provide both your email address and password.';
         } elseif (!filter_var($submittedEmail, FILTER_VALIDATE_EMAIL)) {
             $errorMessage = 'Please enter a valid email address.';
         } else {
-            // 3. Query user record with PDO prepared statement
             try {
                 $pdo = getDBConnection();
                 $stmt = $pdo->prepare('SELECT id, name, email, password_hash, role FROM users WHERE email = ? LIMIT 1');
@@ -73,12 +78,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // If no block condition, complete login
                     if (empty($errorMessage)) {
+                        clearRateLimit('login_' . $clientIp);
                         loginUser($user, $profileId);
                         setFlash('success', 'Welcome back, ' . $user['name'] . '!');
                         redirectToRoleDashboard($user['role']);
                     }
                 } else {
-                    $errorMessage = 'Invalid email address or password. Please verify your credentials.';
+                    recordRateLimitAttempt('login_' . $clientIp);
+                    $attemptsLeft = $rateLimit['remaining'] - 1;
+                    $attemptNote = $attemptsLeft > 0 ? " ({$attemptsLeft} attempts remaining)" : " (Account temporarily rate-limited)";
+                    $errorMessage = 'Invalid email address or password. Please verify your credentials.' . $attemptNote;
                 }
             } catch (PDOException $e) {
                 error_log('[VMS LOGIN ERROR] ' . $e->getMessage());
@@ -113,7 +122,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="form-group">
                     <label for="email" class="form-label required">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" 
-                           placeholder="e.g. parent@example.com" 
+                           placeholder="e.g. ahmed.khan@example.com" 
                            value="<?= e($submittedEmail); ?>" required autofocus>
                 </div>
 
@@ -139,11 +148,11 @@ require_once __DIR__ . '/includes/header.php';
                 </p>
             </div>
 
-            <!-- Demo Quick-Fill Credentials Helper (Helpful for Project Evaluators) -->
-            <div style="margin-top: 1.5rem; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); font-size: 0.8rem;">
-                <strong>Test Accounts (Seed Data):</strong>
-                <ul style="margin: 0.4rem 0 0 1.2rem; line-height: 1.5; color: var(--text-muted);">
-                    <li><strong>Parent:</strong> <code>john.doe@example.com</code> / <code>Parent@123</code></li>
+            <!-- Demo Quick-Fill Credentials Helper -->
+            <div style="margin-top: 1.5rem; background: var(--bg-subtle); padding: 1rem; border-radius: var(--radius-md); font-size: 0.8rem; border: 1px solid var(--border-color);">
+                <strong>Test Accounts (Pakistan Localized):</strong>
+                <ul style="margin: 0.4rem 0 0 1.2rem; line-height: 1.6; color: var(--text-muted);">
+                    <li><strong>Parent:</strong> <code>ahmed.khan@example.com</code> / <code>Parent@123</code> (or <code>john.doe@example.com</code>)</li>
                     <li><strong>Hospital:</strong> <code>city.general@hospital.local</code> / <code>Hospital@123</code></li>
                     <li><strong>Admin:</strong> <code>admin@vms.local</code> / <code>Admin@123</code> (<a href="<?= url('admin/login.php'); ?>">Admin Portal</a>)</li>
                 </ul>

@@ -116,7 +116,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div>
             <a href="<?= url('hospital/vaccine_stock.php'); ?>" class="btn btn-outline btn-sm">
-                &#128137; Verify Vaccine Stock &rarr;
+                Verify Vaccine Stock &rarr;
             </a>
         </div>
     </div>
@@ -125,7 +125,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="form-tabs" style="max-width: 750px; margin-bottom: 1.5rem;">
         <a href="<?= url('hospital/appointments.php?tab=today'); ?>" 
            class="form-tab-btn <?= $activeTab === 'today' ? 'is-active' : ''; ?>" style="text-decoration: none;">
-            &#128197; Today's Queue (<?= $countToday; ?>)
+            Today's Queue (<?= $countToday; ?>)
         </a>
         <a href="<?= url('hospital/appointments.php?tab=upcoming'); ?>" 
            class="form-tab-btn <?= $activeTab === 'upcoming' ? 'is-active' : ''; ?>" style="text-decoration: none;">
@@ -173,7 +173,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card">
         <?php if (empty($appointments)): ?>
             <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                <span style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem;">&#128102;</span>
+                <span style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem;"></span>
                 <p style="font-size: 1.1rem; margin-bottom: 0.35rem;">No appointments found in this category.</p>
                 <small>New appointments will appear here once approved by system administration.</small>
             </div>
@@ -202,7 +202,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?= e($a['parent_name']); ?><br>
-                                    <small style="color: var(--text-muted);">&#128222; <?= e($a['parent_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($a['parent_phone']); ?></small>
                                 </td>
                                 <td>
                                     <span class="badge badge-info"><?= e($a['vaccine_name']); ?></span><br>
@@ -210,12 +210,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <strong><?= formatDate($a['preferred_date']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($a['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($a['time_slot']); ?></small>
                                 </td>
                                 <td>
                                     <?php if ($a['vaccination_status'] === 'vaccinated'): ?>
                                         <span class="badge badge-success">&#10004; Vaccinated</span><br>
-                                        <small style="color: var(--text-muted);"><?= formatDate($a['vaccinated_on'], 'M d, Y h:i A'); ?></small>
+                                        <small style="color: var(--text-muted);"><?= formatDate($a['vaccinated_on'], 'd-m-Y h:i A'); ?></small>
                                     <?php elseif ($a['vaccination_status'] === 'not_vaccinated'): ?>
                                         <span class="badge badge-danger">&#10006; Missed / Not Given</span>
                                     <?php else: ?>

@@ -88,7 +88,7 @@ if ($viewId > 0) {
             </div>
             <div>
                 <a href="<?= url('admin/reports.php?child_id=' . (int)$child['id']); ?>" class="btn btn-primary btn-sm">
-                    &#128438; Print Child Certificate
+                    Print Child Certificate
                 </a>
             </div>
         </div>
@@ -99,7 +99,7 @@ if ($viewId > 0) {
                 <!-- Child Overview -->
                 <div style="border-right: 1px solid var(--border-color); padding-right: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                        <span style="font-size: 2rem;">&#128102;</span>
+                        <span style="font-size: 2rem;"></span>
                         <div>
                             <h2 style="margin: 0; font-size: 1.4rem;"><?= e($child['name']); ?></h2>
                             <span class="badge badge-info" style="margin-top: 0.2rem;">Blood Group: <?= e($child['blood_group']); ?></span>
@@ -115,10 +115,10 @@ if ($viewId > 0) {
 
                 <!-- Parent & Guardian Info -->
                 <div>
-                    <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--text-muted);">&#128106; Parent / Guardian Details</h3>
+                    <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--text-muted);">Parent / Guardian Details</h3>
                     <ul style="list-style: none; padding: 0; line-height: 1.8; font-size: 0.92rem;">
                         <li><strong>Parent Name:</strong> <?= e($child['parent_name']); ?></li>
-                        <li><strong>Contact Phone:</strong> &#128222; <?= e($child['parent_phone']); ?></li>
+                        <li><strong>Contact Phone:</strong> <?= e($child['parent_phone']); ?></li>
                         <li><strong>Email Address:</strong> &#9993; <?= e($child['parent_email']); ?></li>
                         <li><strong>Residential Address:</strong> <?= e($child['parent_address']); ?></li>
                     </ul>
@@ -170,7 +170,7 @@ if ($viewId > 0) {
                                     <?php if ($isCompleted): ?>
                                         <span class="badge badge-success">&#10004; Vaccinated</span>
                                     <?php elseif ($isScheduled): ?>
-                                        <span class="badge badge-info">&#128197; Scheduled</span>
+                                        <span class="badge badge-info">Scheduled</span>
                                     <?php elseif ($isOverdue): ?>
                                         <span class="badge badge-danger">&#9888; Overdue</span>
                                     <?php else: ?>
@@ -188,7 +188,7 @@ if ($viewId > 0) {
                                 </td>
                                 <td>
                                     <?php if ($isCompleted): ?>
-                                        <?= formatDate($completedDoses[$vId]['vaccinated_on'], 'M d, Y h:i A'); ?><br>
+                                        <?= formatDate($completedDoses[$vId]['vaccinated_on'], 'd-m-Y h:i A'); ?><br>
                                         <small style="color: var(--text-muted);"><?= e($completedDoses[$vId]['remarks'] ?: 'Routine administration'); ?></small>
                                     <?php elseif ($isScheduled): ?>
                                         <small>Slot: <?= formatDate($scheduledDoses[$vId]['preferred_date']); ?> (<?= e($scheduledDoses[$vId]['time_slot']); ?>)</small>
@@ -316,7 +316,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <strong><?= e($ch['parent_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128222; <?= e($ch['parent_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($ch['parent_phone']); ?></small>
                                 </td>
                                 <td>
                                     <span class="badge badge-success">&#10004; <?= (int)$ch['doses_completed']; ?> doses</span>

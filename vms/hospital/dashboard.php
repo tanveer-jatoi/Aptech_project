@@ -111,8 +111,8 @@ require_once __DIR__ . '/../includes/header.php';
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                <span class="badge badge-success">&#127973; Healthcare Facility</span>
-                <span style="font-size: 0.85rem; color: var(--text-muted);">&#128205; <?= e($hospital['location']); ?>, <?= e($hospital['city']); ?></span>
+                <span class="badge badge-success">Healthcare Facility</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"><?= e($hospital['location']); ?>, <?= e($hospital['city']); ?></span>
             </div>
             <h1><?= e($hospital['name']); ?></h1>
             <p style="margin: 0;">Clinical appointment queue, patient verification, and vaccine stock management.</p>
@@ -120,10 +120,10 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <a href="<?= url('hospital/appointments.php'); ?>" class="btn btn-primary">
-                &#128102; Patient Appointments
+                Patient Appointments
             </a>
             <a href="<?= url('hospital/vaccine_stock.php'); ?>" class="btn btn-outline">
-                &#128137; Manage Vaccine Stock
+                Manage Vaccine Stock
             </a>
         </div>
     </div>
@@ -145,7 +145,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small style="color: var(--text-muted);">Scheduled for <?= date('M d'); ?></small>
             </div>
             <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
-                &#128197;
+                
             </div>
         </div>
 
@@ -180,7 +180,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small><a href="<?= url('hospital/vaccine_stock.php'); ?>">Update inventory &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #ccfbf1; color: #0f766e;">
-                &#128137;
+                
             </div>
         </div>
     </div>
@@ -226,7 +226,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?= e($p['parent_name']); ?><br>
-                                    <small style="color: var(--text-muted);">&#128222; <?= e($p['parent_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($p['parent_phone']); ?></small>
                                 </td>
                                 <td>
                                     <span class="badge badge-info"><?= e($p['vaccine_name']); ?></span>
@@ -236,7 +236,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?= formatDate($p['preferred_date']); ?>
                                         <?= $p['preferred_date'] === date('Y-m-d') ? '<span class="badge badge-warning" style="font-size: 0.65rem;">TODAY</span>' : ''; ?>
                                     </strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($p['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($p['time_slot']); ?></small>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
                                     <a href="<?= url('hospital/update_status.php?id=' . (int)$p['id']); ?>" class="btn btn-primary btn-sm">

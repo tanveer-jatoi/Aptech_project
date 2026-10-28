@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 error_log('[BOOKING ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error submitting appointment: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while submitting your appointment. Please try again.';
             }
         }
     }
@@ -244,8 +244,8 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="radio" name="hospital_id" value="<?= (int)$h['id']; ?>" <?= $idx === 0 ? 'checked' : ''; ?> required style="margin-top: 0.25rem;">
                                     <div class="hospital-info">
                                         <strong class="hospital-name"><?= e($h['name']); ?></strong><br>
-                                        <small style="color: var(--text-muted);">&#128205; <?= e($h['location']); ?>, <?= e($h['city']); ?></small><br>
-                                        <small style="color: var(--text-light);">&#128222; <?= e($h['phone']); ?></small><br>
+                                        <small style="color: var(--text-muted);"><?= e($h['location']); ?>, <?= e($h['city']); ?></small><br>
+                                        <small style="color: var(--text-light);"><?= e($h['phone']); ?></small><br>
                                         <span class="badge badge-success" style="margin-top: 0.35rem; font-size: 0.7rem;">In Stock</span>
                                     </div>
                                 </div>

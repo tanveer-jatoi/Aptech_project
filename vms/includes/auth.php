@@ -7,9 +7,10 @@
  * ============================================================================
  * 
  * DESIGN RATIONALE:
- * - Configures HTTP-only cookies to prevent JavaScript token theft (XSS mitigation).
+ * - Configures HTTP-only, SameSite=Lax cookies to prevent JavaScript token theft (XSS mitigation).
  * - Enforces session_regenerate_id(true) on successful login to prevent Session Fixation.
  * - Centralizes role authorization (admin / parent / hospital) with guard functions.
+ * - Implements sliding session inactivity timeout (2 hours).
  */
 
 // Prevent direct HTTP access
@@ -22,16 +23,29 @@ require_once __DIR__ . '/flash.php';
 
 // Initialize session with secure cookie flags if not already running
 if (session_status() === PHP_SESSION_NONE) {
-    // Set secure session cookie parameters
+    $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
     session_set_cookie_params([
         'lifetime' => 0,          // Expire when browser closes
         'path'     => '/',
         'domain'   => '',
-        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'secure'   => $isHttps,   // Secure flag active when on HTTPS
         'httponly' => true,       // Inaccessible to JavaScript
         'samesite' => 'Lax'       // Protection against CSRF attacks
     ]);
     session_start();
+
+    // Session inactivity timeout: 2 hours (7200 seconds)
+    if (isset($_SESSION['user_id'])) {
+        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 7200)) {
+            logoutUser();
+            session_start();
+            setFlash('warning', 'Your session expired due to inactivity. Please sign in again.');
+        } else {
+            $_SESSION['last_activity'] = time();
+        }
+    }
 }
 
 /**
@@ -96,11 +110,12 @@ function loginUser(array $user, ?int $profileId = null): void
     // Regenerate session ID to mitigate session fixation attacks
     session_regenerate_id(true);
 
-    $_SESSION['user_id']    = (int)$user['id'];
-    $_SESSION['user_name']  = $user['name'];
-    $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_role']  = $user['role'];
-    $_SESSION['profile_id'] = $profileId !== null ? (int)$profileId : null;
+    $_SESSION['user_id']       = (int)$user['id'];
+    $_SESSION['user_name']     = $user['name'];
+    $_SESSION['user_email']    = $user['email'];
+    $_SESSION['user_role']     = $user['role'];
+    $_SESSION['profile_id']    = $profileId !== null ? (int)$profileId : null;
+    $_SESSION['last_activity'] = time();
 
     // Refresh CSRF token for the new authenticated session
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -128,7 +143,9 @@ function logoutUser(): void
         );
     }
 
-    session_destroy();
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
 }
 
 /**

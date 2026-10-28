@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', 'Vaccine status changed to ' . ucfirst($newStatus) . ' successfully!');
             } catch (PDOException $e) {
                 error_log('[VACCINE STATUS TOGGLE ERROR] ' . $e->getMessage());
-                setFlash('danger', 'Failed to update vaccine status: ' . $e->getMessage());
+                setFlash('danger', 'Failed to update vaccine availability status. Please try again.');
             }
         }
         header('Location: ' . url('admin/vaccines.php'));
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (PDOException $e) {
                 $pdo->rollBack();
                 error_log('[ADD VACCINE ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error adding vaccine: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while adding the vaccine. Please try again.';
             }
         }
     }
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 error_log('[UPDATE VACCINE ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error updating vaccine: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while updating the vaccine. Please try again.';
             }
         }
     }

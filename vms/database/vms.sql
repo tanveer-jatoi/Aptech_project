@@ -3,6 +3,7 @@
 -- Database: vms_db
 -- Engine: InnoDB | Charset: utf8mb4 | Collation: utf8mb4_unicode_ci
 -- Target Platform: MySQL 5.7+ / MySQL 8.0+ / MariaDB 10.4+ (XAMPP/WAMP)
+-- Region: Pakistan Localized (PKR, Pakistani Cities, Realistic Demo Data)
 -- =====================================================================
 
 CREATE DATABASE IF NOT EXISTS `vms_db`
@@ -48,7 +49,7 @@ CREATE TABLE `users` (
 CREATE TABLE `parents` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL COMMENT 'Foreign key to users.id',
-  `phone` VARCHAR(25) NOT NULL COMMENT 'Primary contact number for notifications',
+  `phone` VARCHAR(25) NOT NULL COMMENT 'Primary contact number for notifications (+92)',
   `address` TEXT NOT NULL COMMENT 'Residential physical address',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -132,6 +133,7 @@ CREATE TABLE `hospital_vaccines` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_hospital_vaccine` (`hospital_id`, `vaccine_id`),
   KEY `idx_hv_status` (`status`),
+  KEY `idx_hv_hosp_status` (`hospital_id`, `status`),
   CONSTRAINT `fk_hv_hospital` FOREIGN KEY (`hospital_id`)
     REFERENCES `hospitals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_hv_vaccine` FOREIGN KEY (`vaccine_id`)
@@ -164,6 +166,8 @@ CREATE TABLE `bookings` (
   KEY `idx_bookings_admin_status` (`admin_status`),
   KEY `idx_bookings_vac_status` (`vaccination_status`),
   KEY `idx_bookings_preferred_date` (`preferred_date`),
+  KEY `idx_bookings_parent_child` (`parent_id`, `child_id`),
+  KEY `idx_bookings_hosp_schedule` (`hospital_id`, `preferred_date`, `vaccination_status`),
   CONSTRAINT `fk_bookings_child` FOREIGN KEY (`child_id`)
     REFERENCES `children` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_bookings_parent` FOREIGN KEY (`parent_id`)
@@ -176,15 +180,16 @@ CREATE TABLE `bookings` (
 
 -- =====================================================================
 -- TABLE: reviews
--- Parent feedback and ratings displayed on the public landing page.
+-- Real parent feedback and ratings.
 -- Filtered by is_approved = 1 to guarantee safe public presentation.
+-- Strictly no fabricated testimonials or false claims.
 -- =====================================================================
 CREATE TABLE `reviews` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `parent_id` INT UNSIGNED NOT NULL COMMENT 'Foreign key to parents.id',
   `rating` TINYINT UNSIGNED NOT NULL COMMENT 'Rating score from 1 (lowest) to 5 (highest)',
   `comment` TEXT NOT NULL COMMENT 'Written testimonial from parent',
-  `is_approved` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = Approved for public carousel, 0 = Pending/Hidden',
+  `is_approved` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = Approved for public presentation, 0 = Pending/Hidden',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_reviews_parent` (`parent_id`),
@@ -194,7 +199,7 @@ CREATE TABLE `reviews` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================================
--- SEED DATA
+-- SEED DATA (Pakistan Localized)
 -- Default Passwords:
 -- Admin:    Admin@123    ($2y$10$ftdG5j.tvPsJkJxi7k8ICuPIqSRBc172Fm8jV6XDGhKh1edpTtePe)
 -- Parents:  Parent@123   ($2y$10$Sy8Fc1u/LvbegkTi2J0RH.z5uhX8ixRdtBMsb5I02B0fSh5WZGKxe)
@@ -204,30 +209,30 @@ CREATE TABLE `reviews` (
 -- 1. Insert Users (1 Admin, 2 Parents, 3 Hospitals)
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role`, `created_at`) VALUES
 (1, 'System Administrator', 'admin@vms.local', '$2y$10$ftdG5j.tvPsJkJxi7k8ICuPIqSRBc172Fm8jV6XDGhKh1edpTtePe', 'admin', NOW()),
-(2, 'John Doe', 'john.doe@example.com', '$2y$10$Sy8Fc1u/LvbegkTi2J0RH.z5uhX8ixRdtBMsb5I02B0fSh5WZGKxe', 'parent', NOW()),
-(3, 'Sarah Smith', 'sarah.smith@example.com', '$2y$10$Sy8Fc1u/LvbegkTi2J0RH.z5uhX8ixRdtBMsb5I02B0fSh5WZGKxe', 'parent', NOW()),
-(4, 'City General Hospital', 'city.general@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW()),
-(5, 'St. Jude Children Wellness', 'stjude.care@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW()),
-(6, 'Metro Pediatrics Center', 'metro.pediatrics@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW());
+(2, 'Ahmed Khan', 'ahmed.khan@example.com', '$2y$10$Sy8Fc1u/LvbegkTi2J0RH.z5uhX8ixRdtBMsb5I02B0fSh5WZGKxe', 'parent', NOW()),
+(3, 'Fatima Khan', 'fatima.khan@example.com', '$2y$10$Sy8Fc1u/LvbegkTi2J0RH.z5uhX8ixRdtBMsb5I02B0fSh5WZGKxe', 'parent', NOW()),
+(4, 'Indus Children Hospital', 'indus.hospital@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW()),
+(5, 'The Children\'s Hospital Lahore', 'children.hospital@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW()),
+(6, 'Federal Pediatric Care Center', 'federal.pediatrics@hospital.local', '$2y$10$FIfv5GvsGt4ayxJfYOvfPOTWB/SK5i4cEqjYbkf135tJ3lZevZjte', 'hospital', NOW());
 
 -- 2. Insert Parents Profile Records
 INSERT INTO `parents` (`id`, `user_id`, `phone`, `address`, `created_at`) VALUES
-(1, 2, '+1-555-0101', '742 Evergreen Terrace, Springfield', NOW()),
-(2, 3, '+1-555-0202', '124 Conch Street, Pacific City', NOW());
+(1, 2, '+92-300-1234567', 'House 14, Street 5, Block 3, Clifton, Karachi', NOW()),
+(2, 3, '+92-321-9876543', 'House 82, Sector F-8/2, Islamabad', NOW());
 
 -- 3. Insert Hospitals Profile Records
 INSERT INTO `hospitals` (`id`, `user_id`, `name`, `address`, `city`, `location`, `phone`, `status`, `created_at`) VALUES
-(1, 4, 'City General Hospital', '100 Healthcare Blvd', 'Metropolis', 'Central District, Block 4', '+1-555-1100', 'active', NOW()),
-(2, 5, 'St. Jude Children Wellness', '45 Sunshine Parkway', 'Gotham', 'West District, Near City Park', '+1-555-2200', 'active', NOW()),
-(3, 6, 'Metro Pediatrics Center', '88 Medical Plaza', 'Starling City', 'North Bay Health Zone', '+1-555-3300', 'active', NOW());
+(1, 4, 'Indus Children Hospital', 'Plot 39, Korangi Crossing, Karachi', 'Karachi', 'Korangi Crossing, Sector 39', '+92-21-35112709', 'active', NOW()),
+(2, 5, 'The Children\'s Hospital Lahore', 'Main Ferozepur Road, Lahore', 'Lahore', 'Ferozepur Road Health Zone', '+92-42-99230901', 'active', NOW()),
+(3, 6, 'Federal Pediatric Care Center', 'Luqman Hakeem Road, Sector G-6/2, Islamabad', 'Islamabad', 'Sector G-6/2 Pediatric Center', '+92-51-9224400', 'active', NOW());
 
 -- 4. Insert Children (Dates dynamically relative to current date for realistic testing)
 INSERT INTO `children` (`id`, `parent_id`, `name`, `dob`, `gender`, `blood_group`, `created_at`) VALUES
-(1, 1, 'Leo Doe', DATE_SUB(CURDATE(), INTERVAL 45 DAY), 'male', 'O+', NOW()),
-(2, 1, 'Emma Doe', DATE_SUB(CURDATE(), INTERVAL 300 DAY), 'female', 'A+', NOW()),
-(3, 2, 'Noah Smith', DATE_SUB(CURDATE(), INTERVAL 180 DAY), 'male', 'B+', NOW());
+(1, 1, 'Hamza Khan', DATE_SUB(CURDATE(), INTERVAL 45 DAY), 'male', 'O+', NOW()),
+(2, 1, 'Ayesha Khan', DATE_SUB(CURDATE(), INTERVAL 300 DAY), 'female', 'A+', NOW()),
+(3, 2, 'Muhammad Ali', DATE_SUB(CURDATE(), INTERVAL 180 DAY), 'male', 'B+', NOW());
 
--- 5. Insert Vaccines (8 standard infant vaccines with recommended age in days)
+-- 5. Insert Vaccines (8 standard infant vaccines recommended by national immunization schedule in Pakistan)
 INSERT INTO `vaccines` (`id`, `name`, `description`, `recommended_age_days`, `doses`, `status`, `created_at`) VALUES
 (1, 'BCG (Bacillus Calmette-Guérin)', 'Protects newborns from severe forms of tuberculosis, including tuberculous meningitis.', 0, 1, 'available', NOW()),
 (2, 'Hepatitis B (HepB)', 'Prevents Hepatitis B infection, protecting the liver from lifelong chronic disease and cirrhosis.', 0, 3, 'available', NOW()),
@@ -240,13 +245,13 @@ INSERT INTO `vaccines` (`id`, `name`, `description`, `recommended_age_days`, `do
 
 -- 6. Insert Hospital Vaccine Stock Allocations
 INSERT INTO `hospital_vaccines` (`hospital_id`, `vaccine_id`, `status`) VALUES
--- Hospital 1 (City General) stocks all
+-- Hospital 1 (Indus Children Hospital) stocks all
 (1, 1, 'available'), (1, 2, 'available'), (1, 3, 'available'), (1, 4, 'available'),
 (1, 5, 'available'), (1, 6, 'available'), (1, 7, 'available'), (1, 8, 'available'),
--- Hospital 2 (St. Jude)
+-- Hospital 2 (The Children's Hospital Lahore)
 (2, 1, 'available'), (2, 2, 'available'), (2, 3, 'available'), (2, 4, 'available'),
 (2, 5, 'unavailable'), (2, 6, 'available'), (2, 7, 'available'), (2, 8, 'available'),
--- Hospital 3 (Metro Pediatrics)
+-- Hospital 3 (Federal Pediatric Care Center)
 (3, 1, 'available'), (3, 2, 'available'), (3, 3, 'available'), (3, 4, 'available'),
 (3, 5, 'available'), (3, 6, 'available'), (3, 7, 'available'), (3, 8, 'unavailable');
 
@@ -256,9 +261,3 @@ INSERT INTO `bookings` (`id`, `child_id`, `parent_id`, `hospital_id`, `vaccine_i
 (2, 1, 1, 1, 3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), '10:30 AM - 11:30 AM', 'approved', 'vaccinated', DATE_SUB(NOW(), INTERVAL 3 DAY), 'Dose 1 given orally. Tolerated well by infant.', DATE_SUB(NOW(), INTERVAL 5 DAY)),
 (3, 2, 1, 2, 8, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '11:00 AM - 12:00 PM', 'approved', 'pending', NULL, 'Slot approved by admin. Please bring child health booklet.', DATE_SUB(NOW(), INTERVAL 1 DAY)),
 (4, 3, 2, 3, 4, DATE_ADD(CURDATE(), INTERVAL 5 DAY), '02:00 PM - 03:00 PM', 'pending', 'pending', NULL, 'Awaiting administrative verification.', NOW());
-
--- 8. Insert Parent Reviews for Landing Page Carousel
-INSERT INTO `reviews` (`id`, `parent_id`, `rating`, `comment`, `is_approved`, `created_at`) VALUES
-(1, 1, 5, 'The automated vaccination schedule reminders are a lifesaver! I never have to worry about missing Leo\'s key immunizations.', 1, DATE_SUB(NOW(), INTERVAL 15 DAY)),
-(2, 2, 5, 'Booking appointments at Metro Pediatrics was completely seamless. Approved quickly and records updated right away.', 1, DATE_SUB(NOW(), INTERVAL 10 DAY)),
-(3, 1, 4, 'Excellent initiative. Very clean interface and the hospital staff verified and logged the dose within minutes.', 1, DATE_SUB(NOW(), INTERVAL 5 DAY));

@@ -113,7 +113,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                 <span class="badge badge-danger">Administrator Panel</span>
-                <span style="font-size: 0.85rem; color: var(--text-muted);">&#128197; <?= date('l, F j, Y'); ?></span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"><?= date('l, F j, Y'); ?></span>
             </div>
             <h1>System Overview & Live Metrics</h1>
             <p style="margin: 0;">Centralized control of all immunization schedules, centers, and appointments.</p>
@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
                 &#9888; Review Requests (<?= $statPendingRequests; ?>)
             </a>
             <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline btn-sm">
-                &#128202; Generate Reports
+                Generate Reports
             </a>
         </div>
     </div>
@@ -141,7 +141,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small style="color: var(--text-muted);">Scheduled for <?= date('M d'); ?></small>
             </div>
             <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
-                &#128197;
+                
             </div>
         </div>
 
@@ -153,7 +153,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small style="color: var(--text-muted);"><a href="<?= url('admin/children.php'); ?>">View profiles &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #fef3c7; color: #b45309;">
-                &#128102;
+                
             </div>
         </div>
 
@@ -179,7 +179,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small style="color: var(--text-muted);"><a href="<?= url('admin/hospitals.php'); ?>">Manage centers &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #ccfbf1; color: #0f766e;">
-                &#127973;
+                
             </div>
         </div>
 
@@ -190,8 +190,8 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="stat-value" data-count-to="<?= $statAvailableVaccines; ?>"><?= $statAvailableVaccines; ?></div>
                 <small style="color: var(--text-muted);"><a href="<?= url('admin/vaccines.php'); ?>">Catalog & stock &rarr;</a></small>
             </div>
-            <div class="stat-icon" style="background-color: #f3e8ff; color: #7e22ce;">
-                &#128137;
+            <div class="stat-icon" style="background-color: #f0fdf4; color: #166534;">
+                
             </div>
         </div>
 
@@ -231,14 +231,14 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </a>
             <a href="<?= url('admin/vaccines.php?action=add'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;">&#128137;</span>
+                <span style="font-size: 1.4rem;"></span>
                 <div style="text-align: left; margin-left: 0.5rem;">
                     <strong>Add Vaccine</strong><br>
                     <small style="color: var(--text-muted); font-weight: normal;">Expand catalog schedule</small>
                 </div>
             </a>
             <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;">&#128203;</span>
+                <span style="font-size: 1.4rem;"></span>
                 <div style="text-align: left; margin-left: 0.5rem;">
                     <strong>Print Reports</strong><br>
                     <small style="color: var(--text-muted); font-weight: normal;">Child & date analytics</small>
@@ -358,7 +358,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td><strong><?= e($v['child_name']); ?></strong></td>
                                 <td><span class="badge badge-success"><?= e($v['vaccine_name']); ?></span></td>
                                 <td><?= e($v['hospital_name']); ?></td>
-                                <td><?= formatDate($v['vaccinated_on'], 'M d, Y h:i A'); ?></td>
+                                <td><?= formatDate($v['vaccinated_on'], 'd-m-Y h:i A'); ?></td>
                                 <td><small style="color: var(--text-muted);"><?= e($v['remarks'] ?: 'Routine dose administered.'); ?></small></td>
                             </tr>
                         <?php endforeach; ?>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#0f172a" />
+  <rect x="40" y="40" width="1120" height="550" rx="20" fill="#1e293b" stroke="#334155" stroke-width="2" />
+  
+  <!-- Icon -->
+  <g transform="translate(100, 180)">
+    <circle cx="60" cy="60" r="54" fill="none" stroke="#0284c7" stroke-width="8" />
+    <path d="M40 60 L80 60 M60 40 L60 80" stroke="#0d9488" stroke-width="10" stroke-linecap="round" />
+  </g>
+  
+  <!-- Content -->
+  <text x="260" y="220" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" fill="#ffffff">
+    Vaccination Management System
+  </text>
+  <text x="260" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" fill="#38bdf8">
+    Pakistan Child Immunization &amp; Hospital Booking Portal
+  </text>
+  <text x="260" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#94a3b8">
+    Automated Due Date Reminders &bull; Certified Hospital Network &bull; Digital Health Records
+  </text>
+  
+  <rect x="260" y="390" width="220" height="50" rx="8" fill="none" stroke="#0284c7" stroke-width="3" />
+  <text x="370" y="423" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="#38bdf8" text-anchor="middle">
+    vms.health
+  </text>
+</svg>
+

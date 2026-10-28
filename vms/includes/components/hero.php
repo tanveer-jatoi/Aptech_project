@@ -3,14 +3,8 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: includes/components/hero.php
- * Description: Homepage Hero Reveal Section with Staggered Keyframe Animation
+ * Description: Homepage Hero Section with Clean Outlined CTAs
  * ============================================================================
- * 
- * ANIMATION REQUIREMENT 1 (Hero Reveal):
- * - Name, tagline, and CTA button sliding/fading in on load.
- * - Powered by .animate-hero-reveal, .animate-hero-delay-1, .animate-hero-delay-2
- *   defined in animations.css (transform & opacity only).
- * - Immediately renders final resting position when prefers-reduced-motion is active.
  */
 
 if (!defined('VMS_APP')) {
@@ -20,34 +14,34 @@ if (!defined('VMS_APP')) {
 <section class="hero-wrapper" aria-label="Hero Introduction">
     <div class="container">
         <!-- Tag / Pill Reveal -->
-        <div class="animate-hero-reveal">
+        <div class="hero-reveal">
             <span class="hero-tag">
-                <span style="font-size: 1rem;">&#128137;</span> National Child Immunization Initiative
+                Pakistan Child Immunization Initiative
             </span>
         </div>
 
         <!-- Headline Reveal -->
-        <h1 class="hero-title animate-hero-delay-1">
+        <h1 class="hero-title hero-reveal">
             Protecting Every Child’s Future Through Timely, Verified Immunization
         </h1>
 
         <!-- Tagline / Subtitle Reveal -->
-        <p class="hero-subtitle animate-hero-delay-1">
+        <p class="hero-subtitle hero-reveal">
             Never miss an essential vaccination milestone. Track automated age-based schedules, discover authorized pediatric clinics, and book appointments seamlessly online.
         </p>
 
-        <!-- Call to Action Buttons Reveal -->
-        <div class="hero-actions animate-hero-delay-2">
+        <!-- Call to Action Buttons Reveal (Outlined, Non-Filled Styles) -->
+        <div class="hero-actions hero-reveal">
             <?php if (isLoggedIn()): ?>
-                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
-                    Go to Your Dashboard &rarr;
+                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    Go to Your Portal Dashboard &rarr;
                 </a>
             <?php else: ?>
-                <a href="<?= url('register.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
-                    &#10010; Book Vaccination Appointment
+                <a href="<?= url('register.php'); ?>" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    Register Child for Vaccination
                 </a>
-                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 1.05rem; background: #ffffff;">
-                    &#127973; Find Nearby Hospitals
+                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 1rem;">
+                    Find Participating Hospitals
                 </a>
             <?php endif; ?>
         </div>

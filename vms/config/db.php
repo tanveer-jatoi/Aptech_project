@@ -18,18 +18,54 @@
 
 // Prevent direct script execution if requested outside the application context
 if (!defined('VMS_APP')) {
-    // If not included through an authorized entry point, define it for standalone DB scripts
     define('VMS_APP', true);
 }
 
+// Enforce Pakistan Local Timezone
+date_default_timezone_set('Asia/Karachi');
+
+// Simple .env Loader if present
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile) && is_readable($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        if (str_contains($line, '=')) {
+            list($key, $val) = explode('=', $line, 2);
+            $key = trim($key);
+            $val = trim($val, " \t\n\r\0\x0B\"'");
+            if (!getenv($key)) {
+                putenv("{$key}={$val}");
+                $_ENV[$key] = $val;
+            }
+        }
+    }
+}
+
+// Production Error Display Mode Configuration
+$appDebug = filter_var(getenv('APP_DEBUG') ?: false, FILTER_VALIDATE_BOOLEAN);
+if ($appDebug) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_STRICT);
+}
+ini_set('log_errors', '1');
+
 // Database Connection Configuration Constants
 // Default XAMPP settings: Host 127.0.0.1 / Port 3306 / User 'root' / Blank Password
-define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3306');
-define('DB_NAME', 'vms_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_CHARSET', 'utf8mb4');
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_NAME', getenv('DB_NAME') ?: 'vms_db');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+define('DB_CHARSET', getenv('DB_CHARSET') ?: 'utf8mb4');
 
 /**
  * Retrieves the shared PDO database connection instance.
@@ -51,30 +87,24 @@ function getDBConnection(): PDO
         );
 
         $options = [
-            // Throw exceptions on errors for structured try/catch handling
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            // Fetch rows as associative arrays by default (e.g. $row['column_name'])
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            // Disable emulated prepares so MySQL driver handles true prepared statements
             PDO::ATTR_EMULATE_PREPARES   => false,
-            // Ensure connection uses UTF-8 encoding
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET . ", time_zone = '+05:00'"
         ];
 
         try {
             $pdoInstance = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {
-            // Write detailed failure reason to the Apache/PHP system log for debugging
             error_log('[VMS DB ERROR] Connection failed: ' . $e->getMessage());
 
-            // Terminate execution with a safe, user-friendly message without leaking credentials
             http_response_code(500);
             echo '<!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Database Connection Error - VMS</title>
+                <title>Database Service Unavailable - VMS</title>
                 <style>
                     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 80vh; margin: 0; }
                     .error-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); padding: 2rem; max-width: 520px; width: 100%; text-align: center; }
@@ -104,5 +134,5 @@ function getDBConnection(): PDO
     return $pdoInstance;
 }
 
-// Create a globally accessible $pdo instance for procedural convenience in views and scripts
+// Create globally accessible $pdo instance
 $pdo = getDBConnection();

@@ -11,14 +11,15 @@ if (!defined('VMS_APP')) {
     define('VMS_APP', true);
 }
 
-$isAuth = isLoggedIn();
-$role   = currentRole();
-$uName  = currentUserName();
+$isAuth  = isLoggedIn();
+$role    = currentRole();
+$uName   = currentUserName();
+$homeUrl = $isAuth ? url($role . '/dashboard.php') : url('index.php');
 ?>
 <nav class="navbar" role="navigation" aria-label="Main Navigation">
     <div class="container nav-container">
-        <!-- Brand / Logo -->
-        <a href="<?= url('index.php'); ?>" class="brand" aria-label="Vaccination Management System Home">
+        <!-- Brand / Logo (Clickable, links to user role dashboard or guest home) -->
+        <a href="<?= $homeUrl; ?>" class="brand" aria-label="Vaccination Management System Home">
             <span class="brand-icon" aria-hidden="true">&#10010;</span>
             <span>VMS<span style="color: var(--teal); font-weight: 500;">.health</span></span>
         </a>

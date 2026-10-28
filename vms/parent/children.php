@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 error_log('[ADD CHILD ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error creating child profile: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while creating the child profile. Please try again.';
             }
         }
 
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } catch (PDOException $e) {
                 error_log('[UPDATE CHILD ERROR] ' . $e->getMessage());
-                $errors[] = 'Database error updating child profile: ' . $e->getMessage();
+                $errors[] = 'A database error occurred while updating the child profile. Please try again.';
             }
         }
 
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('success', 'Child profile has been removed from your account.');
             } catch (PDOException $e) {
                 error_log('[DELETE CHILD ERROR] ' . $e->getMessage());
-                setFlash('danger', 'Failed to remove child profile: ' . $e->getMessage());
+                setFlash('danger', 'Failed to remove child profile. It may have linked active records.');
             }
         }
         header('Location: ' . url('parent/children.php'));
@@ -189,7 +189,7 @@ if ($action === 'view' && $childId > 0) {
         <!-- Child Summary Badge Card -->
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <span style="font-size: 2.2rem;">&#128102;</span>
+                <span style="font-size: 2.2rem;"></span>
                 <div>
                     <h3 style="margin: 0;"><?= e($child['name']); ?></h3>
                     <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">
@@ -241,7 +241,7 @@ if ($action === 'view' && $childId > 0) {
                                         <span class="badge badge-success">&#10004; Vaccinated</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($bookingHistory[$vId]['vaccinated_on']); ?></small>
                                     <?php elseif ($isApproved): ?>
-                                        <span class="badge badge-info">&#128197; Scheduled</span><br>
+                                        <span class="badge badge-info">Scheduled</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($bookingHistory[$vId]['preferred_date']); ?></small>
                                     <?php elseif ($isPending): ?>
                                         <span class="badge badge-warning">&#9203; Approval Pending</span>
@@ -257,7 +257,7 @@ if ($action === 'view' && $childId > 0) {
                                 <td style="text-align: right;">
                                     <?php if ($isVaccinated): ?>
                                         <a href="<?= url('parent/reports.php?child_id=' . (int)$child['id']); ?>" class="btn btn-outline btn-sm">
-                                            &#128203; Certificate
+                                            Certificate
                                         </a>
                                     <?php elseif (!$hasRecord): ?>
                                         <a href="<?= url('parent/book.php?child_id=' . (int)$child['id'] . '&vaccine_id=' . $vId); ?>" class="btn btn-primary btn-sm">
@@ -356,7 +356,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label for="name" class="form-label required">Child Full Name</label>
-                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Leo Alexander Doe" required>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Hamza Khan" required>
                 </div>
 
                 <div class="grid grid-2">
@@ -456,7 +456,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card">
             <?php if (empty($childrenList)): ?>
                 <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">&#128102;</span>
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;"></span>
                     <h3>No Children Registered Yet</h3>
                     <p style="max-width: 420px; margin: 0 auto 1.25rem;">
                         Register your newborn or child to generate a personalized immunization schedule and book hospital appointments.
@@ -508,7 +508,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             <input type="hidden" name="child_id" value="<?= (int)$ch['id']; ?>">
                                             <button type="submit" class="btn btn-danger btn-sm" title="Delete Profile"
                                                     onclick="return confirm('Are you sure you want to delete <?= e($ch['name']); ?>\'s profile?');">
-                                                &#128465;
+                                                Delete
                                             </button>
                                         </form>
                                     </td>

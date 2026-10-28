@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } catch (PDOException $e) {
             error_log('[REQUEST MODERATION ERROR] ' . $e->getMessage());
-            setFlash('danger', 'Database error updating request: ' . $e->getMessage());
+            setFlash('danger', 'A database error occurred while updating the appointment status. Please try again.');
         }
     }
 
@@ -175,18 +175,18 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <strong><?= e($r['parent_name']); ?></strong><br>
                                     <small style="color: var(--text-muted);">
-                                        &#128222; <?= e($r['parent_phone']); ?><br>
+                                        <?= e($r['parent_phone']); ?><br>
                                         &#9993; <?= e($r['parent_email']); ?>
                                     </small>
                                 </td>
                                 <td>
                                     <span class="badge badge-info"><?= e($r['vaccine_name']); ?></span><br>
                                     <strong><?= e($r['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($r['hospital_city']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($r['hospital_city']); ?></small>
                                 </td>
                                 <td>
                                     <strong><?= formatDate($r['preferred_date']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($r['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($r['time_slot']); ?></small>
                                 </td>
                                 <td>
                                     <?php if ($r['admin_status'] === 'pending'): ?>

@@ -193,16 +193,16 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?= e($b['parent_name']); ?><br>
-                                    <small style="color: var(--text-muted);">&#128222; <?= e($b['parent_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['parent_phone']); ?></small>
                                 </td>
                                 <td>
                                     <span class="badge badge-info"><?= e($b['vaccine_name']); ?></span><br>
                                     <strong><?= e($b['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($b['hospital_city']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['hospital_city']); ?></small>
                                 </td>
                                 <td>
                                     <strong><?= formatDate($b['preferred_date']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128337; <?= e($b['time_slot']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($b['time_slot']); ?></small>
                                 </td>
                                 <td>
                                     <?php if ($b['admin_status'] === 'approved'): ?>
@@ -216,7 +216,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td>
                                     <?php if ($b['vaccination_status'] === 'vaccinated'): ?>
                                         <span class="badge badge-success">&#10004; Vaccinated</span><br>
-                                        <small style="color: var(--text-muted);"><?= formatDate($b['vaccinated_on'], 'M d, Y'); ?></small>
+                                        <small style="color: var(--text-muted);"><?= formatDate($b['vaccinated_on'], 'd-m-Y'); ?></small>
                                     <?php elseif ($b['vaccination_status'] === 'not_vaccinated'): ?>
                                         <span class="badge badge-danger">&#10006; Missed / Not Done</span>
                                     <?php else: ?>

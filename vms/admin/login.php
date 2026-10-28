@@ -3,7 +3,7 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: admin/login.php
- * Description: Dedicated Administrative Access Portal
+ * Description: Dedicated Administrative Access Portal with Rate Limiting
  * ============================================================================
  */
 
@@ -30,8 +30,12 @@ $errorMessage = '';
 $submittedEmail = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['csrf_token'] ?? '';
-    if (!verifyCSRFToken($token)) {
+    $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateLimit = checkRateLimit('admin_login_' . $clientIp, 5, 300);
+
+    if (!$rateLimit['allowed']) {
+        $errorMessage = 'Too many failed administrative login attempts. Please wait ' . ceil($rateLimit['retry_after'] / 60) . ' minutes before trying again.';
+    } elseif (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $errorMessage = 'Security validation failed (Invalid CSRF token). Please try again.';
     } else {
         $submittedEmail = sanitizeInput($_POST['email'] ?? '');
@@ -50,13 +54,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($user['role'] !== 'admin') {
                         $errorMessage = 'Access denied. This administrative portal is restricted to system administrators.';
                     } else {
+                        clearRateLimit('admin_login_' . $clientIp);
                         loginUser($user, null);
                         setFlash('success', 'Welcome to the Administration Panel, ' . $user['name'] . '!');
                         header('Location: ' . url('admin/dashboard.php'));
                         exit;
                     }
                 } else {
-                    $errorMessage = 'Invalid administrative credentials. Please verify your login details.';
+                    recordRateLimitAttempt('admin_login_' . $clientIp);
+                    $attemptsLeft = $rateLimit['remaining'] - 1;
+                    $attemptNote = $attemptsLeft > 0 ? " ({$attemptsLeft} attempts remaining)" : " (Account temporarily locked)";
+                    $errorMessage = 'Invalid administrative credentials. Please verify your login details.' . $attemptNote;
                 }
             } catch (PDOException $e) {
                 error_log('[VMS ADMIN LOGIN ERROR] ' . $e->getMessage());
@@ -75,7 +83,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="auth-header">
                 <span class="badge badge-danger" style="margin-bottom: 0.5rem;">Restricted Access</span>
                 <h1>Admin Control Portal</h1>
-                <p>System management, appointment moderation & vaccine oversight.</p>
+                <p>System management, appointment moderation &amp; vaccine oversight.</p>
             </div>
 
             <?php if (!empty($errorMessage)): ?>
@@ -101,17 +109,13 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div style="margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-danger btn-block">Authenticate Admin &rarr;</button>
+                    <button type="submit" class="btn btn-danger btn-block">Authenticate Administrator &rarr;</button>
                 </div>
             </form>
 
             <div class="auth-footer">
-                <p style="margin-bottom: 0.5rem;">Not an administrator? 
-                    <a href="<?= url('login.php'); ?>" style="font-weight: 600;">Parent & Hospital Login</a>
-                </p>
-                <p style="margin: 0; font-size: 0.8rem; color: #94a3b8;">
-                    Default Admin: <code>admin@vms.local</code> / <code>Admin@123</code>
-                </p>
+                <p style="margin-bottom: 0.5rem;">Looking for Guardian or Clinic Portal?</p>
+                <a href="<?= url('login.php'); ?>" style="font-weight: 600;">Go to User Login &rarr;</a>
             </div>
         </div>
     </div>

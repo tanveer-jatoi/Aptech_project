@@ -138,7 +138,7 @@ require_once __DIR__ . '/../includes/header.php';
         </a>
         <a href="<?= url('admin/vaccinations.php?view=upcoming'); ?>" 
            class="form-tab-btn <?= $activeView === 'upcoming' ? 'is-active' : ''; ?>" style="text-decoration: none;">
-            &#128197; Upcoming Schedule (<?= $countUpcoming; ?>)
+            Upcoming Schedule (<?= $countUpcoming; ?>)
         </a>
     </div>
 
@@ -226,17 +226,17 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <strong><?= e($r['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($r['hospital_city']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($r['hospital_city']); ?></small>
                                 </td>
                                 <td>
                                     <?= e($r['parent_name']); ?><br>
-                                    <small style="color: var(--text-muted);">&#128222; <?= e($r['parent_phone']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($r['parent_phone']); ?></small>
                                 </td>
 
                                 <?php if ($activeView === 'completed'): ?>
                                     <td>
-                                        <strong style="color: var(--success);">&#10004; <?= formatDate($r['vaccinated_on'], 'M d, Y'); ?></strong><br>
-                                        <small style="color: var(--text-muted);">&#128337; <?= formatDate($r['vaccinated_on'], 'h:i A'); ?></small>
+                                        <strong style="color: var(--success);">&#10004; <?= formatDate($r['vaccinated_on'], 'd-m-Y'); ?></strong><br>
+                                        <small style="color: var(--text-muted);"><?= formatDate($r['vaccinated_on'], 'h:i A'); ?></small>
                                     </td>
                                     <td>
                                         <small><?= e($r['remarks'] ?: 'Successfully administered with no immediate contraindications.'); ?></small>
@@ -244,7 +244,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <?php else: ?>
                                     <td>
                                         <strong><?= formatDate($r['preferred_date']); ?></strong><br>
-                                        <small style="color: var(--text-muted);">&#128337; <?= e($r['time_slot']); ?></small>
+                                        <small style="color: var(--text-muted);"><?= e($r['time_slot']); ?></small>
                                     </td>
                                     <td>
                                         <span class="badge badge-success">&#10004; Approved</span><br>

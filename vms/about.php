@@ -3,7 +3,7 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: about.php
- * Description: About the Initiative, Healthcare Mission & Vaccine Safety
+ * Description: About the Initiative, Healthcare Mission & Vaccine Safety in Pakistan
  * ============================================================================
  */
 
@@ -15,7 +15,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/flash.php';
 
 $pageTitle = 'About the Initiative | Child Vaccination Management System';
-$pageDescription = 'Learn about our mission to eradicate missed childhood immunizations through digital healthcare coordination.';
+$pageDescription = 'Learn about our mission to eradicate missed childhood immunizations in Pakistan through digital healthcare coordination.';
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -25,7 +25,7 @@ require_once __DIR__ . '/includes/header.php';
         <span class="badge badge-info" style="margin-bottom: 0.5rem;">Our Healthcare Mission</span>
         <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Transforming Child Immunization Delivery</h1>
         <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6;">
-            A modern public health platform designed to eliminate missed vaccinations, bridge families with licensed pediatric facilities, and provide real-time immunization tracking.
+            A modern public health platform designed to eliminate missed vaccinations across Pakistan, bridge families with licensed pediatric facilities, and provide real-time immunization tracking.
         </p>
     </div>
 
@@ -33,11 +33,11 @@ require_once __DIR__ . '/includes/header.php';
     <div class="grid grid-2" style="gap: 2rem; margin-bottom: 3.5rem;">
         <div class="card" style="border-left: 5px solid var(--danger);">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <span style="font-size: 2rem;">&#9888;</span>
+                <span style="font-size: 2rem; color: var(--danger);">&#9888;</span>
                 <h3 style="margin: 0;">The Problem: Fragmented Manual Records</h3>
             </div>
             <p style="color: var(--text-muted); line-height: 1.6;">
-                Historically, childhood vaccination tracking relied on manual paper cards and school-based collection drives. Busy parents frequently misplaced paper booklets, leading to skipped booster doses, delayed immunizations, and preventable disease outbreaks.
+                Historically, childhood vaccination tracking in Pakistan relied on manual paper cards and school-based collection drives. Busy parents frequently misplaced paper booklets, leading to skipped booster doses, delayed immunizations, and preventable disease outbreaks.
             </p>
             <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">
                 Furthermore, clinics had no unified method to forecast local vaccine demand or verify whether a visiting child had already received specific doses elsewhere.
@@ -46,14 +46,14 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="card" style="border-left: 5px solid var(--success);">
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <span style="font-size: 2rem;">&#10004;</span>
+                <span style="font-size: 2rem; color: var(--success);">&#10004;</span>
                 <h3 style="margin: 0;">The Solution: Centralized Digital Coordination</h3>
             </div>
             <p style="color: var(--text-muted); line-height: 1.6;">
-                The <strong>Vaccination Management System (VMS)</strong> establishes a single source of truth. As soon as a parent registers their child's Date of Birth, our automated engine computes the exact recommended milestones according to national healthcare protocols.
+                The <strong>Vaccination Management System (VMS)</strong> establishes a single source of truth aligned with the Expanded Programme on Immunization (EPI) guidelines. As soon as a parent registers their child's Date of Birth, our automated engine computes the exact recommended milestones.
             </p>
             <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Parents can discover nearby centers with confirmed vaccine stock, submit appointment requests, and download tamper-evident digital immunization certificates for school admissions and travel.
+                Parents can discover nearby centers with confirmed vaccine stock, submit appointment requests, and download tamper-evident digital immunization certificates for school admissions and records.
             </p>
         </div>
     </div>
@@ -66,8 +66,8 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 4rem;">
         <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1.25rem;">
-                &#128106;
+            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary-dark); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
+                
             </div>
             <h3>For Parents</h3>
             <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
@@ -76,8 +76,8 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #ccfbf1; color: #0f766e; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1.25rem;">
-                &#127973;
+            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--teal-dark); color: var(--teal-dark); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
+                
             </div>
             <h3>For Pediatric Centers</h3>
             <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
@@ -86,7 +86,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 1.25rem;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--danger); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
                 &#9878;
             </div>
             <h3>For Administration</h3>
@@ -105,7 +105,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="card" style="margin-bottom: 1rem;">
             <h4>How are vaccination due dates calculated?</h4>
             <p style="margin: 0; font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
-                Due dates are calculated by our engine by taking the child's recorded Date of Birth (DOB) and adding the recommended age in days for each milestone (e.g. BCG at 0 days/birth, Polio and Pentavalent at 42 days/6 weeks, MMR at 270 days/9 months).
+                Due dates are calculated by our engine by taking the child's recorded Date of Birth (DOB) and adding the recommended age in days for each milestone (e.g. BCG at birth, Polio and Pentavalent at 42 days/6 weeks, MMR at 270 days/9 months).
             </p>
         </div>
 
@@ -116,11 +116,33 @@ require_once __DIR__ . '/includes/header.php';
             </p>
         </div>
 
-        <div class="card">
+        <div class="card" style="margin-bottom: 2rem;">
             <h4>Can I print my child's official immunization certificate?</h4>
             <p style="margin: 0; font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
                 Yes! From the parent portal under Reports, you can print an official, formatted Child Immunization Health Card that includes certified dates, clinic stamps, and attending physician signature lines for school or daycare admissions.
             </p>
+        </div>
+
+        <!-- Actionable Call to Action -->
+        <div class="card" style="text-align: center; padding: 2rem; background: var(--bg-subtle); border: 2px solid var(--border-color);">
+            <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Take the Next Step for Your Child's Health</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                Join thousands of families in Pakistan keeping their immunization records up to date.
+            </p>
+            <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+                <?php if (isLoggedIn()): ?>
+                    <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary">
+                        Open Portal Dashboard &rarr;
+                    </a>
+                <?php else: ?>
+                    <a href="<?= url('register.php'); ?>" class="btn btn-primary">
+                        Register Child Profile
+                    </a>
+                    <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline">
+                        Browse Clinics in Pakistan
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>

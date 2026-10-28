@@ -119,7 +119,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div style="display: flex; gap: 0.5rem;">
             <button type="button" class="btn btn-primary" onclick="window.print()">
-                &#128438; Print Official Health Card
+                Print Official Health Card
             </button>
             <a href="<?= url('parent/book.php?child_id=' . $selectedChildId); ?>" class="btn btn-outline">
                 &#10010; Book Next Dose
@@ -151,7 +151,7 @@ require_once __DIR__ . '/../includes/header.php';
             <span><strong><?= $completedCount; ?></strong> of <?= $totalVaccinesCount; ?> catalog vaccines taken (<?= $percentComplete; ?>%)</span>
         </div>
         <div style="background-color: var(--bg-subtle); height: 12px; border-radius: var(--radius-full); overflow: hidden;">
-            <div style="background: linear-gradient(90deg, var(--teal), var(--primary)); width: <?= $percentComplete; ?>%; height: 100%; transition: width 0.4s ease;"></div>
+            <div style="background-color: var(--teal); width: <?= $percentComplete; ?>%; height: 100%; transition: width 0.4s ease;"></div>
         </div>
     </div>
 
@@ -173,7 +173,7 @@ require_once __DIR__ . '/../includes/header.php';
         <!-- Demographics Box -->
         <div class="grid grid-2" style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
             <div>
-                <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">&#128102; Child Patient Information</h4>
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">Child Patient Information</h4>
                 <table style="width: 100%; font-size: 0.9rem; line-height: 1.8;">
                     <tr><td style="width: 110px; color: var(--text-muted);">Full Name:</td><td><strong><?= e($selectedChild['name']); ?></strong></td></tr>
                     <tr><td style="color: var(--text-muted);">Date of Birth:</td><td><?= formatDate($selectedChild['dob']); ?></td></tr>
@@ -183,12 +183,12 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <div>
-                <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">&#128106; Guardian Information</h4>
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">Guardian Information</h4>
                 <table style="width: 100%; font-size: 0.9rem; line-height: 1.8;">
                     <tr><td style="width: 110px; color: var(--text-muted);">Parent Name:</td><td><strong><?= e(currentUserName()); ?></strong></td></tr>
                     <tr><td style="color: var(--text-muted);">Contact Phone:</td><td><?= e($parent['phone']); ?></td></tr>
                     <tr><td style="color: var(--text-muted);">Address:</td><td><?= e($parent['address']); ?></td></tr>
-                    <tr><td style="color: var(--text-muted);">Certified Date:</td><td><?= date('M d, Y'); ?></td></tr>
+                    <tr><td style="color: var(--text-muted);">Certified Date:</td><td><?= date('d-m-Y'); ?></td></tr>
                 </table>
             </div>
         </div>
@@ -224,10 +224,10 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <strong><?= e($dose['hospital_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);">&#128205; <?= e($dose['hospital_city']); ?></small>
+                                    <small style="color: var(--text-muted);"><?= e($dose['hospital_city']); ?></small>
                                 </td>
                                 <td>
-                                    <strong style="color: var(--success);">&#10004; <?= formatDate($dose['vaccinated_on'], 'M d, Y'); ?></strong>
+                                    <strong style="color: var(--success);">&#10004; <?= formatDate($dose['vaccinated_on'], 'd-m-Y'); ?></strong>
                                 </td>
                                 <td>
                                     <?= formatDate($dose['vaccinated_on'], 'h:i A'); ?>
