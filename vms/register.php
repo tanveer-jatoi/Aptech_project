@@ -13,6 +13,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/flash.php';
+require_once __DIR__ . '/includes/ui.php';
 
 // Redirect if already authenticated
 if (isLoggedIn()) {
@@ -22,7 +23,7 @@ if (isLoggedIn()) {
 $pageTitle = 'Create an Account | Register';
 $pageDescription = 'Register as a parent to track child immunizations or register an accredited medical facility in Pakistan.';
 
-$activeTab = 'parent';
+$activeTab = (($_GET['type'] ?? '') === 'hospital') ? 'hospital' : 'parent';
 $errors = [];
 $formData = [
     'parent_name'      => '',
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // 2. Anti-spam Honeypot Check
     elseif (!verifyHoneypot('website_hp')) {
-        $errors[] = 'Spam registration detected and blocked.';
+        $errors[] = 'Registration could not be completed. Please try again.';
     } else {
         // 3. Rate limiting check (Max 10 per hour per IP)
         $clientIp = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -95,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (empty($password)) {
                     $errors[] = 'Password is required.';
-                } elseif (strlen($password) < 6) {
-                    $errors[] = 'Password must be at least 6 characters.';
+                } elseif (strlen($password) < 8) {
+                    $errors[] = 'Password must be at least 8 characters.';
                 }
                 if ($password !== $confirm) {
                     $errors[] = 'Passwords do not match.';
@@ -118,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // 1. Insert User account
                         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                        $uStmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, "parent", NOW())');
+                        $uStmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, \'parent\', NOW())');
                         $uStmt->execute([$name, $email, $passwordHash]);
                         $userId = (int)$pdo->lastInsertId();
 
@@ -132,10 +133,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         setFlash('success', 'Your parent account has been created successfully! Please sign in below.');
                         header('Location: ' . url('login.php'));
                         exit;
-                    } catch (PDOException $e) {
-                        $pdo->rollBack();
-                        error_log('[VMS PARENT REG ERROR] ' . $e->getMessage());
-                        $errors[] = 'Registration could not be completed at this time. Please try again.';
+                    } catch (PDOException $ex) {
+                        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                        error_log('[VMS PARENT REG ERROR] ' . $ex->getMessage());
+                        $errors[] = ($ex->getCode() === '23000')
+                            ? 'That email address is already registered. Please sign in instead.'
+                            : 'Registration could not be completed at this time. Please try again.';
                     }
                 }
 
@@ -191,8 +194,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 if (empty($password)) {
                     $errors[] = 'Password is required.';
-                } elseif (strlen($password) < 6) {
-                    $errors[] = 'Password must be at least 6 characters.';
+                } elseif (strlen($password) < 8) {
+                    $errors[] = 'Password must be at least 8 characters.';
                 }
                 if ($password !== $confirm) {
                     $errors[] = 'Passwords do not match.';
@@ -212,20 +215,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // 1. Insert User account
                         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                        $uStmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, "hospital", NOW())');
+                        $uStmt = $pdo->prepare('INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, \'hospital\', NOW())');
                         $uStmt->execute([$hName, $email, $passwordHash]);
                         $userId = (int)$pdo->lastInsertId();
 
                         // 2. Insert Hospital Profile
-                        $hStmt = $pdo->prepare('INSERT INTO hospitals (user_id, name, address, city, location, phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?, "active", NOW())');
+                        $hStmt = $pdo->prepare('INSERT INTO hospitals (user_id, name, address, city, location, phone, status, created_at) VALUES (?, ?, ?, ?, ?, ?, \'active\', NOW())');
                         $hStmt->execute([$userId, $hName, $address, $city, $location, $phone]);
                         $hospitalId = (int)$pdo->lastInsertId();
 
                         // 3. Initialize default hospital vaccine inventory from active vaccines catalog
-                        $vStmt = $pdo->query('SELECT id FROM vaccines WHERE status = "available"');
+                        $vStmt = $pdo->query('SELECT id FROM vaccines WHERE status = \'available\'');
                         $vaccines = $vStmt->fetchAll();
                         if (!empty($vaccines)) {
-                            $stockStmt = $pdo->prepare('INSERT INTO hospital_vaccines (hospital_id, vaccine_id, status) VALUES (?, ?, "available")');
+                            $stockStmt = $pdo->prepare('INSERT INTO hospital_vaccines (hospital_id, vaccine_id, status) VALUES (?, ?, \'available\')');
                             foreach ($vaccines as $vac) {
                                 $stockStmt->execute([$hospitalId, $vac['id']]);
                             }
@@ -237,10 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         setFlash('success', 'Your healthcare facility has been registered successfully! You may now sign in.');
                         header('Location: ' . url('login.php'));
                         exit;
-                    } catch (PDOException $e) {
-                        $pdo->rollBack();
-                        error_log('[VMS HOSPITAL REG ERROR] ' . $e->getMessage());
-                        $errors[] = 'Facility registration could not be completed. Please try again.';
+                    } catch (PDOException $ex) {
+                        if ($pdo->inTransaction()) { $pdo->rollBack(); }
+                        error_log('[VMS HOSPITAL REG ERROR] ' . $ex->getMessage());
+                        $errors[] = ($ex->getCode() === '23000')
+                            ? 'That email address is already registered. Please sign in instead.'
+                            : 'Facility registration could not be completed. Please try again.';
                     }
                 }
             }
@@ -249,25 +254,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require_once __DIR__ . '/includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
     <div class="auth-wrapper">
         <div class="auth-card auth-card-wide">
             <div class="auth-header">
-                <h1>Create an Account</h1>
-                <p>Register as a parent to track child immunizations or partner with us as an authorized vaccination center in Pakistan.</p>
+                <h1>Create an account</h1>
+                <p>Parents track their child's vaccines here. Clinics can register to join the vaccination network.</p>
             </div>
 
             <!-- Role Selector Tabs -->
             <div class="form-tabs" role="tablist" aria-label="Registration Options">
                 <button type="button" class="form-tab-btn <?= $activeTab === 'parent' ? 'is-active' : ''; ?>" 
                         id="tabParentBtn" role="tab" aria-selected="<?= $activeTab === 'parent' ? 'true' : 'false'; ?>">
-                    Parent Registration
+                    Parent
                 </button>
                 <button type="button" class="form-tab-btn <?= $activeTab === 'hospital' ? 'is-active' : ''; ?>" 
                         id="tabHospitalBtn" role="tab" aria-selected="<?= $activeTab === 'hospital' ? 'true' : 'false'; ?>">
-                    Hospital / Clinic Center
+                    Hospital or clinic
                 </button>
             </div>
 
@@ -318,7 +324,7 @@ require_once __DIR__ . '/includes/header.php';
                         <label for="parent_phone" class="form-label required">Phone Number</label>
                         <input type="tel" id="parent_phone" name="parent_phone" class="form-control" 
                                placeholder="e.g. 0300-1234567" value="<?= e($formData['parent_phone']); ?>" required
-                               pattern="^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[- ]?[0-9]{7,8}$"
+                               pattern="^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[\- ]?[0-9]{7,8}$"
                                title="Valid Pakistani phone number (e.g. 0300-1234567 or +92 300 1234567)">
                         <small class="form-hint">Format: 0300-1234567 or +92 300 1234567</small>
                     </div>
@@ -334,20 +340,20 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="form-group">
                         <label for="parent_pass" class="form-label required">Password</label>
                         <input type="password" id="parent_pass" name="password" class="form-control" 
-                               placeholder="Min 6 characters" required minlength="6">
+                               placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
                     </div>
 
                     <div class="form-group">
                         <label for="parent_pass_confirm" class="form-label required">Confirm Password</label>
                         <input type="password" id="parent_pass_confirm" name="password_confirm" class="form-control" 
-                               placeholder="Re-enter password" required minlength="6">
+                               placeholder="Re-enter password" required minlength="8" autocomplete="new-password">
                     </div>
                 </div>
 
                 <div class="form-error form-password-error" style="display: none; margin-bottom: 1rem;"></div>
 
                 <div style="margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-primary btn-block">Complete Parent Registration &rarr;</button>
+                    <button type="submit" class="btn btn-primary btn-block">Create parent account</button>
                 </div>
             </form>
 
@@ -386,7 +392,7 @@ require_once __DIR__ . '/includes/header.php';
                         <label for="hospital_phone" class="form-label required">Hotline / Contact Phone</label>
                         <input type="tel" id="hospital_phone" name="hospital_phone" class="form-control" 
                                placeholder="e.g. 021-34567890 or 0300-1234567" value="<?= e($formData['hospital_phone']); ?>" required
-                               pattern="^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[- ]?[0-9]{7,8}$"
+                               pattern="^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[\- ]?[0-9]{7,8}$"
                                title="Valid Pakistani phone or landline number">
                         <small class="form-hint">Format: 021-34567890 or 0300-1234567</small>
                     </div>
@@ -416,20 +422,20 @@ require_once __DIR__ . '/includes/header.php';
                     <div class="form-group">
                         <label for="hosp_pass" class="form-label required">Password</label>
                         <input type="password" id="hosp_pass" name="password" class="form-control" 
-                               placeholder="Min 6 characters" required minlength="6">
+                               placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
                     </div>
 
                     <div class="form-group">
                         <label for="hosp_pass_confirm" class="form-label required">Confirm Password</label>
                         <input type="password" id="hosp_pass_confirm" name="password_confirm" class="form-control" 
-                               placeholder="Re-enter password" required minlength="6">
+                               placeholder="Re-enter password" required minlength="8" autocomplete="new-password">
                     </div>
                 </div>
 
                 <div class="form-error form-password-error" style="display: none; margin-bottom: 1rem;"></div>
 
                 <div style="margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-teal btn-block">Register Healthcare Center &rarr;</button>
+                    <button type="submit" class="btn btn-teal btn-block">Register center</button>
                 </div>
             </form>
 

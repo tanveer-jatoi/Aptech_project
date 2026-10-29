@@ -18,6 +18,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/flash.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireRole('parent');
 
@@ -35,6 +36,11 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$userId]);
 $profile = $stmt->fetch();
+
+// dashboard.php creates a placeholder row ('Not provided') when no parent profile exists yet.
+foreach (['phone', 'address'] as $f) {
+    if (($profile[$f] ?? '') === 'Not provided') { $profile[$f] = ''; }
+}
 
 if (!$profile) {
     setFlash('danger', 'Unable to retrieve parent profile.');
@@ -67,13 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Password change validation if attempted
     $changePassword = false;
-    if (!empty($newPass)) {
+    if ($newPass !== '') {
         if (empty($currentPass)) {
             $errors[] = 'Current password is required to set a new password.';
         } elseif (!password_verify($currentPass, $profile['password_hash'])) {
             $errors[] = 'Current password is incorrect.';
-        } elseif (strlen($newPass) < 6) {
-            $errors[] = 'New password must be at least 6 characters.';
+        } elseif (strlen($newPass) < 8) {
+            $errors[] = 'New password must be at least 8 characters.';
         } elseif ($newPass !== $confirmPass) {
             $errors[] = 'New passwords do not match.';
         } else {
@@ -107,14 +113,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
 
-            // Update session name
+            // Update session name; rotate the session id after a password change
             $_SESSION['user_name'] = $name;
+            if ($changePassword && session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
 
             setFlash('success', 'Your parent profile details have been saved successfully!');
             header('Location: ' . url('parent/profile.php'));
             exit;
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) { $pdo->rollBack(); }
             error_log('[PARENT PROFILE UPDATE ERROR] ' . $e->getMessage());
             $errors[] = 'A database error occurred while saving profile details. Please try again.';
         }
@@ -124,12 +133,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'My Profile';
 $pageDescription = 'View and update your parent contact details and security settings.';
 require_once __DIR__ . '/../includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
     <div style="max-width: 720px; margin: 0 auto;">
         <div style="margin-bottom: 1.5rem;">
-            <h1>Parent Account Profile</h1>
+            <h1>My profile</h1>
             <p style="margin: 0;">Keep your contact number and home address updated for hospital appointment notifications.</p>
         </div>
 
@@ -175,7 +185,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="form-group">
                         <label for="phone" class="form-label required">Primary Contact Phone</label>
                         <input type="tel" id="phone" name="phone" class="form-control" 
-                               placeholder="0300-1234567" 
+                               placeholder="0300-1234567" autocomplete="tel"
+                               pattern="^((\+92|0092|0)?(3[0-9]{2}|[2456789][0-9]))[\- ]?[0-9]{7,8}$"
+                               title="Pakistani phone number, e.g. 0300-1234567 or +92 300 1234567"
                                value="<?= e($_POST['phone'] ?? $profile['phone']); ?>" required>
                         <small class="form-hint">Hospitals contact you at this number</small>
                     </div>
@@ -199,25 +211,25 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="form-group">
                     <label for="current_password" class="form-label">Current Password</label>
                     <input type="password" id="current_password" name="current_password" class="form-control" 
-                           placeholder="Enter current password to verify identity">
+                           placeholder="Needed only to set a new password" autocomplete="current-password">
                 </div>
 
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="new_password" class="form-label">New Password</label>
                         <input type="password" id="new_password" name="new_password" class="form-control" 
-                               placeholder="Min 6 characters">
+                               placeholder="At least 8 characters" minlength="8" autocomplete="new-password">
                     </div>
 
                     <div class="form-group">
                         <label for="confirm_password" class="form-label">Confirm New Password</label>
                         <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
-                               placeholder="Re-enter new password">
+                               placeholder="Re-enter new password" autocomplete="new-password">
                     </div>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                    <button type="submit" class="btn btn-primary">Save Profile Changes &rarr;</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
                 </div>
             </form>
         </div>

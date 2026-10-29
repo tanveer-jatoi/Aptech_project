@@ -18,6 +18,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/flash.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireRole('parent');
 
@@ -38,6 +39,7 @@ if ($parentId === 0) {
 $action = $_GET['action'] ?? 'list';
 $childId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $errors = [];
+$bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 // ----------------------------------------------------------------------------
 // 1. HANDLE POST ACTIONS (Add, Update, Delete)
@@ -61,10 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bloodGroup = sanitizeInput($_POST['blood_group'] ?? '');
 
         if (empty($name))       $errors[] = 'Child name is required.';
-        if (empty($dob))        $errors[] = 'Date of birth is required.';
+        elseif (mb_strlen($name) > 100) $errors[] = 'Child name is too long (100 characters maximum).';
+        if ($dob === '' || !isValidYmd($dob)) $errors[] = 'Enter a valid date of birth.';
         elseif (strtotime($dob) > strtotime('today')) $errors[] = 'Date of birth cannot be in the future.';
+        elseif (strtotime($dob) < strtotime('-18 years')) $errors[] = 'VMS is for children under 18. Please check the date of birth.';
         if (empty($gender))     $errors[] = 'Gender is required.';
-        if (empty($bloodGroup)) $errors[] = 'Blood group is required.';
+        if (!in_array($bloodGroup, $bloodGroups, true)) $errors[] = 'Select a blood group.';
 
         if (empty($errors)) {
             try {
@@ -93,10 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($targetId <= 0)     $errors[] = 'Invalid child ID.';
         if (empty($name))       $errors[] = 'Child name is required.';
-        if (empty($dob))        $errors[] = 'Date of birth is required.';
+        elseif (mb_strlen($name) > 100) $errors[] = 'Child name is too long (100 characters maximum).';
+        if ($dob === '' || !isValidYmd($dob)) $errors[] = 'Enter a valid date of birth.';
         elseif (strtotime($dob) > strtotime('today')) $errors[] = 'Date of birth cannot be in the future.';
+        elseif (strtotime($dob) < strtotime('-18 years')) $errors[] = 'VMS is for children under 18. Please check the date of birth.';
         if (empty($gender))     $errors[] = 'Gender is required.';
-        if (empty($bloodGroup)) $errors[] = 'Blood group is required.';
+        if (!in_array($bloodGroup, $bloodGroups, true)) $errors[] = 'Select a blood group.';
 
         // Strict ownership check
         if (empty($errors)) {
@@ -129,17 +135,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($targetId > 0) {
             try {
-                $dStmt = $pdo->prepare('DELETE FROM children WHERE id = ? AND parent_id = ?');
-                $dStmt->execute([$targetId, $parentId]);
+                $chk = $pdo->prepare('SELECT COUNT(*) FROM bookings WHERE child_id = ? AND parent_id = ? AND vaccination_status = \'vaccinated\'');
+                $chk->execute([$targetId, $parentId]);
 
-                setFlash('success', 'Child profile has been removed from your account.');
+                if ((int)$chk->fetchColumn() > 0) {
+                    // Recorded vaccinations are medical records: do not wipe them by deleting the profile.
+                    setFlash('warning', 'This child has recorded vaccinations, so the profile cannot be deleted. You can edit the details instead, or ask the helpdesk.');
+                } else {
+                    $pdo->beginTransaction();
+                    $pdo->prepare('DELETE FROM bookings WHERE child_id = ? AND parent_id = ?')->execute([$targetId, $parentId]);
+                    $dStmt = $pdo->prepare('DELETE FROM children WHERE id = ? AND parent_id = ?');
+                    $dStmt->execute([$targetId, $parentId]);
+                    $pdo->commit();
+
+                    setFlash($dStmt->rowCount() > 0 ? 'success' : 'warning',
+                             $dStmt->rowCount() > 0 ? 'The child profile has been removed.' : 'That child profile was not found.');
+                }
             } catch (PDOException $e) {
+                if ($pdo->inTransaction()) { $pdo->rollBack(); }
                 error_log('[DELETE CHILD ERROR] ' . $e->getMessage());
                 setFlash('danger', 'Failed to remove child profile. It may have linked active records.');
             }
         }
         header('Location: ' . url('parent/children.php'));
         exit;
+    }
+}
+
+// After a failed add/update, show the same form again with what the parent typed.
+$old = [];
+if (!empty($errors) && in_array($formAction ?? '', ['add', 'update'], true)) {
+    $action = ($formAction === 'add') ? 'add' : 'edit';
+    $childId = (int)($_POST['child_id'] ?? 0);
+    foreach (['name', 'dob', 'gender', 'blood_group'] as $f) {
+        $old[$f] = (string)($_POST[$f] ?? '');
     }
 }
 
@@ -157,31 +186,41 @@ if ($action === 'view' && $childId > 0) {
         exit;
     }
 
-    $allVaccines = $pdo->query('SELECT * FROM vaccines WHERE status = "available" ORDER BY recommended_age_days ASC')->fetchAll();
+    $allVaccines = $pdo->query('SELECT * FROM vaccines WHERE status = \'available\' ORDER BY recommended_age_days ASC')->fetchAll();
 
     // Fetch existing bookings for this child
-    $bStmt = $pdo->prepare('SELECT b.*, h.name AS hospital_name FROM bookings b JOIN hospitals h ON b.hospital_id = h.id WHERE b.child_id = ?');
+    $bStmt = $pdo->prepare('SELECT b.*, h.name AS hospital_name FROM bookings b JOIN hospitals h ON b.hospital_id = h.id WHERE b.child_id = ? ORDER BY b.created_at ASC');
     $bStmt->execute([$childId]);
     $existingBookings = $bStmt->fetchAll();
 
     $bookingHistory = [];
     foreach ($existingBookings as $eb) {
-        $bookingHistory[$eb['vaccine_id']] = $eb;
+        // A rejected or missed request must not hide the "Book" button.
+        if ($eb['admin_status'] === 'rejected' || $eb['vaccination_status'] === 'not_vaccinated') {
+            continue;
+        }
+        $vid = (int)$eb['vaccine_id'];
+        if (isset($bookingHistory[$vid]) && $bookingHistory[$vid]['vaccination_status'] === 'vaccinated'
+            && $eb['vaccination_status'] !== 'vaccinated') {
+            continue;
+        }
+        $bookingHistory[$vid] = $eb;
     }
 
     $pageTitle = 'Immunization Schedule: ' . $child['name'];
     require_once __DIR__ . '/../includes/header.php';
+    uiStyles();
     ?>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
             <div>
-                <a href="<?= url('parent/children.php'); ?>" class="btn btn-outline btn-sm" style="margin-bottom: 0.5rem;">&larr; Back to Children List</a>
+                <a href="<?= url('parent/children.php'); ?>" class="btn btn-outline btn-sm" style="margin-bottom: 0.5rem;"><?= uiIcon('back', 16); ?> Back to Children List</a>
                 <h1><?= e($child['name']); ?>'s Immunization Timeline</h1>
                 <p style="margin: 0;">National immunization schedule calculated dynamically from Date of Birth.</p>
             </div>
             <div>
                 <a href="<?= url('parent/book.php?child_id=' . (int)$child['id']); ?>" class="btn btn-primary">
-                    &#10010; Book Vaccine Appointment
+                    <?= uiIcon('plus', 16); ?> Book Vaccine Appointment
                 </a>
             </div>
         </div>
@@ -189,7 +228,7 @@ if ($action === 'view' && $childId > 0) {
         <!-- Child Summary Badge Card -->
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <span style="font-size: 2.2rem;"></span>
+                <span class="ui-avatar"><?= uiIcon('child', 24); ?></span>
                 <div>
                     <h3 style="margin: 0;"><?= e($child['name']); ?></h3>
                     <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">
@@ -238,17 +277,17 @@ if ($action === 'view' && $childId > 0) {
                                 <td><strong><?= formatDate($dueDate); ?></strong></td>
                                 <td>
                                     <?php if ($isVaccinated): ?>
-                                        <span class="badge badge-success">&#10004; Vaccinated</span><br>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> Vaccinated</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($bookingHistory[$vId]['vaccinated_on']); ?></small>
                                     <?php elseif ($isApproved): ?>
                                         <span class="badge badge-info">Scheduled</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($bookingHistory[$vId]['preferred_date']); ?></small>
                                     <?php elseif ($isPending): ?>
-                                        <span class="badge badge-warning">&#9203; Approval Pending</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> Approval Pending</span>
                                     <?php elseif ($isOverdue): ?>
-                                        <span class="badge badge-danger">&#9888; Overdue</span>
+                                        <span class="badge badge-danger"><?= uiIcon('alert', 14); ?> Overdue</span>
                                     <?php else: ?>
-                                        <span class="badge badge-warning">&#9203; Upcoming</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> Upcoming</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -289,6 +328,9 @@ if ($action === 'edit' && $childId > 0) {
     $eStmt = $pdo->prepare('SELECT * FROM children WHERE id = ? AND parent_id = ? LIMIT 1');
     $eStmt->execute([$childId, $parentId]);
     $editChild = $eStmt->fetch();
+    if ($editChild && !empty($old)) {
+        foreach ($old as $f => $val) { $editChild[$f] = $val; }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -296,7 +338,7 @@ if ($action === 'edit' && $childId > 0) {
 // ----------------------------------------------------------------------------
 $stmt = $pdo->prepare(
     'SELECT c.*,
-            (SELECT COUNT(*) FROM bookings b WHERE b.child_id = c.id AND b.vaccination_status = "vaccinated") AS doses_completed
+            (SELECT COUNT(*) FROM bookings b WHERE b.child_id = c.id AND b.vaccination_status = \'vaccinated\') AS doses_completed
      FROM children c
      WHERE c.parent_id = ?
      ORDER BY c.dob DESC'
@@ -307,6 +349,7 @@ $childrenList = $stmt->fetchAll();
 $pageTitle = 'My Children';
 $pageDescription = 'Register and maintain your children details for immunization scheduling.';
 require_once __DIR__ . '/../includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
@@ -319,11 +362,11 @@ require_once __DIR__ . '/../includes/header.php';
         <div>
             <?php if ($action === 'list'): ?>
                 <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-primary">
-                    &#10010; Add New Child
+                    <?= uiIcon('plus', 16); ?> Add New Child
                 </a>
             <?php else: ?>
                 <a href="<?= url('parent/children.php'); ?>" class="btn btn-outline">
-                    &larr; Back to Children List
+                    <?= uiIcon('back', 16); ?> Back to Children List
                 </a>
             <?php endif; ?>
         </div>
@@ -334,8 +377,8 @@ require_once __DIR__ . '/../includes/header.php';
             <div>
                 <strong>Please resolve the following:</strong>
                 <ul style="margin: 0.25rem 0 0 1.2rem;">
-                    <?php foreach ($errors as $e): ?>
-                        <li><?= e($e); ?></li>
+                    <?php foreach ($errors as $err): ?>
+                        <li><?= e($err); ?></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -356,13 +399,13 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label for="name" class="form-label required">Child Full Name</label>
-                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Hamza Khan" required>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Hamza Khan" value="<?= e($old['name'] ?? ''); ?>" maxlength="100" required>
                 </div>
 
                 <div class="grid grid-2">
                     <div class="form-group">
                         <label for="dob" class="form-label required">Date of Birth</label>
-                        <input type="date" id="dob" name="dob" class="form-control" max="<?= date('Y-m-d'); ?>" required>
+                        <input type="date" id="dob" name="dob" class="form-control" max="<?= date('Y-m-d'); ?>" min="<?= date('Y-m-d', strtotime('-18 years')); ?>" value="<?= e($old['dob'] ?? ''); ?>" required>
                         <small class="form-hint">Used to calculate exact vaccination due dates</small>
                     </div>
 
@@ -370,9 +413,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <label for="gender" class="form-label required">Gender</label>
                         <select id="gender" name="gender" class="form-select" required>
                             <option value="">Select Gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
+                            <option value="male" <?= ($old['gender'] ?? '') === 'male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="female" <?= ($old['gender'] ?? '') === 'female' ? 'selected' : ''; ?>>Female</option>
+                            <option value="other" <?= ($old['gender'] ?? '') === 'other' ? 'selected' : ''; ?>>Other</option>
                         </select>
                     </div>
                 </div>
@@ -381,14 +424,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <label for="blood_group" class="form-label required">Blood Group</label>
                     <select id="blood_group" name="blood_group" class="form-select" required>
                         <option value="">Select Blood Group</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
+                        <?php foreach ($bloodGroups as $bg): ?>
+                            <option value="<?= $bg; ?>" <?= ($old['blood_group'] ?? '') === $bg ? 'selected' : ''; ?>><?= $bg; ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
 
@@ -436,7 +474,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="form-group">
                     <label for="blood_group" class="form-label required">Blood Group</label>
                     <select id="blood_group" name="blood_group" class="form-select" required>
-                        <?php foreach (['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] as $bg): ?>
+                        <?php foreach ($bloodGroups as $bg): ?>
                             <option value="<?= $bg; ?>" <?= $editChild['blood_group'] === $bg ? 'selected' : ''; ?>><?= $bg; ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -456,13 +494,13 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card">
             <?php if (empty($childrenList)): ?>
                 <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;"></span>
+                    <?= uiIcon('child', 40); ?>
                     <h3>No Children Registered Yet</h3>
                     <p style="max-width: 420px; margin: 0 auto 1.25rem;">
                         Register your newborn or child to generate a personalized immunization schedule and book hospital appointments.
                     </p>
                     <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-primary">
-                        &#10010; Add Child Details
+                        <?= uiIcon('plus', 16); ?> Add Child Details
                     </a>
                 </div>
             <?php else: ?>
@@ -493,21 +531,21 @@ require_once __DIR__ . '/../includes/header.php';
                                         <span class="badge badge-info"><?= e($ch['blood_group']); ?></span>
                                     </td>
                                     <td>
-                                        <span class="badge badge-success">&#10004; <?= (int)$ch['doses_completed']; ?> doses taken</span>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> <?= (int)$ch['doses_completed']; ?> doses taken</span>
                                     </td>
                                     <td style="text-align: right; white-space: nowrap;">
                                         <a href="<?= url('parent/children.php?action=view&id=' . (int)$ch['id']); ?>" class="btn btn-primary btn-sm" title="View Schedule">
                                             Timeline
                                         </a>
                                         <a href="<?= url('parent/children.php?action=edit&id=' . (int)$ch['id']); ?>" class="btn btn-outline btn-sm" title="Edit">
-                                            &#9998;
+                                            <?= uiIcon('edit', 16); ?>
                                         </a>
                                         <form action="<?= url('parent/children.php'); ?>" method="POST" style="display: inline-block; margin-left: 0.25rem;">
                                             <?= csrfField(); ?>
                                             <input type="hidden" name="form_action" value="delete">
                                             <input type="hidden" name="child_id" value="<?= (int)$ch['id']; ?>">
                                             <button type="submit" class="btn btn-danger btn-sm" title="Delete Profile"
-                                                    onclick="return confirm('Are you sure you want to delete <?= e($ch['name']); ?>\'s profile?');">
+                                                    onclick="return confirm(<?= htmlspecialchars(json_encode('Delete ' . $ch['name'] . "'s profile? This cannot be undone."), ENT_QUOTES); ?>);">
                                                 Delete
                                             </button>
                                         </form>

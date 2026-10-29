@@ -4,14 +4,10 @@
  * Vaccination Management System (VMS) - Aptech eProject
  * File: admin/dashboard.php
  * Description: Administrative Command Center & Live Analytics Dashboard
+ * ----------------------------------------------------------------------------
+ * Changes: emoji / HTML-entity icons (which rendered as empty boxes) replaced
+ * with inline SVG icons from includes/ui.php; SQL uses single quotes.
  * ============================================================================
- * 
- * SPECIFICATION COMPLIANCE:
- * - Live stat cards with real DB counts (Today's Bookings, Total Children, Total Hospitals, 
- *   Available Vaccines, Pending Requests).
- * - Minimal, performant count-up micro-animations (data-count-to) via animations.js.
- * - Quick-action workflow to approve/reject urgent parent requests.
- * - Strict role check enforcing 'admin' access only.
  */
 
 define('VMS_APP', true);
@@ -20,43 +16,20 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/flash.php';
+require_once __DIR__ . '/../includes/ui.php';
 
-// Enforce administrative access privileges
 requireRole('admin');
 
 $pdo = getDBConnection();
 
-// ----------------------------------------------------------------------------
-// 1. Fetch Real-Time Key Performance Indicators (Live Stat Cards)
-// ----------------------------------------------------------------------------
 try {
-    // Stat 1: Bookings scheduled for today
-    $stmt = $pdo->query('SELECT COUNT(*) FROM bookings WHERE preferred_date = CURDATE()');
-    $statTodayBookings = (int)$stmt->fetchColumn();
+    $statTodayBookings         = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE preferred_date = CURDATE()')->fetchColumn();
+    $statTotalChildren         = (int)$pdo->query('SELECT COUNT(*) FROM children')->fetchColumn();
+    $statTotalHospitals        = (int)$pdo->query('SELECT COUNT(*) FROM hospitals WHERE status = \'active\'')->fetchColumn();
+    $statAvailableVaccines     = (int)$pdo->query('SELECT COUNT(*) FROM vaccines WHERE status = \'available\'')->fetchColumn();
+    $statPendingRequests       = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE admin_status = \'pending\'')->fetchColumn();
+    $statCompletedVaccinations = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE vaccination_status = \'vaccinated\'')->fetchColumn();
 
-    // Stat 2: Total registered infants & children
-    $stmt = $pdo->query('SELECT COUNT(*) FROM children');
-    $statTotalChildren = (int)$stmt->fetchColumn();
-
-    // Stat 3: Total active hospitals / centers
-    $stmt = $pdo->query('SELECT COUNT(*) FROM hospitals WHERE status = "active"');
-    $statTotalHospitals = (int)$stmt->fetchColumn();
-
-    // Stat 4: Available vaccines in the network
-    $stmt = $pdo->query('SELECT COUNT(*) FROM vaccines WHERE status = "available"');
-    $statAvailableVaccines = (int)$stmt->fetchColumn();
-
-    // Stat 5: Parent booking requests awaiting admin review
-    $stmt = $pdo->query('SELECT COUNT(*) FROM bookings WHERE admin_status = "pending"');
-    $statPendingRequests = (int)$stmt->fetchColumn();
-
-    // Stat 6: Total completed immunizations
-    $stmt = $pdo->query('SELECT COUNT(*) FROM bookings WHERE vaccination_status = "vaccinated"');
-    $statCompletedVaccinations = (int)$stmt->fetchColumn();
-
-    // ------------------------------------------------------------------------
-    // 2. Fetch Urgent Pending Requests (Latest 5 for Immediate Moderation)
-    // ------------------------------------------------------------------------
     $reqStmt = $pdo->prepare(
         'SELECT b.id, b.preferred_date, b.time_slot, b.created_at,
                 c.name AS child_name, c.dob AS child_dob,
@@ -69,16 +42,13 @@ try {
          JOIN users u ON p.user_id = u.id
          JOIN hospitals h ON b.hospital_id = h.id
          JOIN vaccines v ON b.vaccine_id = v.id
-         WHERE b.admin_status = "pending"
+         WHERE b.admin_status = \'pending\'
          ORDER BY b.created_at DESC
          LIMIT 5'
     );
     $reqStmt->execute();
     $recentPending = $reqStmt->fetchAll();
 
-    // ------------------------------------------------------------------------
-    // 3. Fetch Recent Completed Vaccinations (Latest 5)
-    // ------------------------------------------------------------------------
     $doneStmt = $pdo->prepare(
         'SELECT b.id, b.vaccinated_on, b.remarks,
                 c.name AS child_name,
@@ -88,192 +58,182 @@ try {
          JOIN children c ON b.child_id = c.id
          JOIN hospitals h ON b.hospital_id = h.id
          JOIN vaccines v ON b.vaccine_id = v.id
-         WHERE b.vaccination_status = "vaccinated"
+         WHERE b.vaccination_status = \'vaccinated\'
          ORDER BY b.vaccinated_on DESC
          LIMIT 5'
     );
     $doneStmt->execute();
     $recentVaccinated = $doneStmt->fetchAll();
 
-} catch (PDOException $e) {
-    error_log('[ADMIN DASHBOARD DB ERROR] ' . $e->getMessage());
+} catch (PDOException $ex) {
+    error_log('[ADMIN DASHBOARD DB ERROR] ' . $ex->getMessage());
     $statTodayBookings = $statTotalChildren = $statTotalHospitals = $statAvailableVaccines = $statPendingRequests = $statCompletedVaccinations = 0;
     $recentPending = [];
     $recentVaccinated = [];
 }
 
 $pageTitle = 'Administrator Dashboard';
-$pageDescription = 'Live overview of infant registrations, hospital appointments, and vaccine logistics.';
+$pageDescription = 'Live overview of child registrations, hospital appointments, and vaccine stock.';
 require_once __DIR__ . '/../includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
-    <!-- Dashboard Header & Welcome Banner -->
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem;">
+    <!-- Header -->
+    <div class="ui-bar" style="margin-bottom: 2rem;">
         <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                <span class="badge badge-danger">Administrator Panel</span>
-                <span style="font-size: 0.85rem; color: var(--text-muted);"><?= date('l, F j, Y'); ?></span>
+            <div style="display: flex; align-items: center; gap: .5rem; margin-bottom: .25rem;">
+                <span class="badge badge-danger">Administrator panel</span>
+                <span style="font-size: .85rem; color: var(--text-muted);"><?= date('l, F j, Y'); ?></span>
             </div>
-            <h1>System Overview & Live Metrics</h1>
-            <p style="margin: 0;">Centralized control of all immunization schedules, centers, and appointments.</p>
+            <h1>System overview</h1>
+            <p>Manage immunization schedules, centers, and appointments in one place.</p>
         </div>
 
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="<?= url('admin/requests.php'); ?>" class="btn btn-primary btn-sm">
-                &#9888; Review Requests (<?= $statPendingRequests; ?>)
+        <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+            <a href="<?= url('admin/requests.php'); ?>" class="btn btn-primary btn-sm ui-btn-icon">
+                <?= uiIcon('alert', 16); ?> Review requests (<?= $statPendingRequests; ?>)
             </a>
-            <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline btn-sm">
-                Generate Reports
+            <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline btn-sm ui-btn-icon">
+                <?= uiIcon('print', 16); ?> Reports
             </a>
         </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- 1. LIVE STAT CARDS WITH COUNT-UP MICRO-ANIMATIONS                     -->
-    <!-- ====================================================================== -->
+    <!-- Stat cards -->
     <div class="grid grid-3" style="gap: 1.25rem; margin-bottom: 2rem;">
-        <!-- Card 1: Today's Bookings -->
         <div class="stat-card">
             <div>
-                <span class="stat-label">Today's Appointments</span>
+                <span class="stat-label">Today's appointments</span>
                 <div class="stat-value" data-count-to="<?= $statTodayBookings; ?>"><?= $statTodayBookings; ?></div>
                 <small style="color: var(--text-muted);">Scheduled for <?= date('M d'); ?></small>
             </div>
-            <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
-                
+            <div class="stat-icon ui-stat-ico" style="background-color: #e0f2fe; color: #0369a1;">
+                <?= uiIcon('calendar', 24); ?>
             </div>
         </div>
 
-        <!-- Card 2: Total Children Registered -->
         <div class="stat-card">
             <div>
-                <span class="stat-label">Registered Children</span>
+                <span class="stat-label">Registered children</span>
                 <div class="stat-value" data-count-to="<?= $statTotalChildren; ?>"><?= $statTotalChildren; ?></div>
                 <small style="color: var(--text-muted);"><a href="<?= url('admin/children.php'); ?>">View profiles &rarr;</a></small>
             </div>
-            <div class="stat-icon" style="background-color: #fef3c7; color: #b45309;">
-                
+            <div class="stat-icon ui-stat-ico" style="background-color: #fef3c7; color: #b45309;">
+                <?= uiIcon('child', 24); ?>
             </div>
         </div>
 
-        <!-- Card 3: Pending Appointment Requests -->
         <div class="stat-card" style="<?= $statPendingRequests > 0 ? 'border-color: #f59e0b;' : ''; ?>">
             <div>
-                <span class="stat-label">Pending Approvals</span>
+                <span class="stat-label">Pending approvals</span>
                 <div class="stat-value" data-count-to="<?= $statPendingRequests; ?>" style="<?= $statPendingRequests > 0 ? 'color: #d97706;' : ''; ?>">
                     <?= $statPendingRequests; ?>
                 </div>
-                <small><a href="<?= url('admin/requests.php'); ?>" style="color: var(--warning-text); font-weight: 600;">Action required &rarr;</a></small>
+                <small><a href="<?= url('admin/requests.php'); ?>" style="color: var(--warning-text, #92400e); font-weight: 600;">Review now &rarr;</a></small>
             </div>
-            <div class="stat-icon" style="background-color: #fffbeb; color: #d97706;">
-                &#9203;
+            <div class="stat-icon ui-stat-ico" style="background-color: #fffbeb; color: #d97706;">
+                <?= uiIcon('clock', 24); ?>
             </div>
         </div>
 
-        <!-- Card 4: Registered Active Hospitals -->
         <div class="stat-card">
             <div>
-                <span class="stat-label">Active Hospitals</span>
+                <span class="stat-label">Active hospitals</span>
                 <div class="stat-value" data-count-to="<?= $statTotalHospitals; ?>"><?= $statTotalHospitals; ?></div>
                 <small style="color: var(--text-muted);"><a href="<?= url('admin/hospitals.php'); ?>">Manage centers &rarr;</a></small>
             </div>
-            <div class="stat-icon" style="background-color: #ccfbf1; color: #0f766e;">
-                
+            <div class="stat-icon ui-stat-ico" style="background-color: #ccfbf1; color: #0f766e;">
+                <?= uiIcon('hospital', 24); ?>
             </div>
         </div>
 
-        <!-- Card 5: Available Vaccines -->
         <div class="stat-card">
             <div>
-                <span class="stat-label">Active Vaccines</span>
+                <span class="stat-label">Active vaccines</span>
                 <div class="stat-value" data-count-to="<?= $statAvailableVaccines; ?>"><?= $statAvailableVaccines; ?></div>
-                <small style="color: var(--text-muted);"><a href="<?= url('admin/vaccines.php'); ?>">Catalog & stock &rarr;</a></small>
+                <small style="color: var(--text-muted);"><a href="<?= url('admin/vaccines.php'); ?>">Catalog and stock &rarr;</a></small>
             </div>
-            <div class="stat-icon" style="background-color: #f0fdf4; color: #166534;">
-                
+            <div class="stat-icon ui-stat-ico" style="background-color: #f0fdf4; color: #166534;">
+                <?= uiIcon('syringe', 24); ?>
             </div>
         </div>
 
-        <!-- Card 6: Completed Vaccinations -->
         <div class="stat-card">
             <div>
-                <span class="stat-label">Doses Administered</span>
+                <span class="stat-label">Doses administered</span>
                 <div class="stat-value" data-count-to="<?= $statCompletedVaccinations; ?>"><?= $statCompletedVaccinations; ?></div>
-                <small style="color: var(--text-muted);">Verified by hospitals</small>
+                <small style="color: var(--text-muted);">Recorded by hospitals</small>
             </div>
-            <div class="stat-icon" style="background-color: #ecfdf5; color: #047857;">
-                &#10004;
+            <div class="stat-icon ui-stat-ico" style="background-color: #ecfdf5; color: #047857;">
+                <?= uiIcon('check', 24); ?>
             </div>
         </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- 2. QUICK ADMINISTRATIVE ACTIONS                                       -->
-    <!-- ====================================================================== -->
+    <!-- Shortcuts -->
     <div class="card" style="margin-bottom: 2rem;">
         <div class="card-header">
-            <h3>Quick Administration Shortcuts</h3>
+            <h3>Quick actions</h3>
         </div>
         <div class="grid grid-4" style="gap: 1rem;">
             <a href="<?= url('admin/requests.php'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;">&#9989;</span>
-                <div style="text-align: left; margin-left: 0.5rem;">
-                    <strong>Approve Requests</strong><br>
-                    <small style="color: var(--text-muted); font-weight: normal;">Moderate parent bookings</small>
-                </div>
+                <?= uiIcon('check', 24); ?>
+                <span style="text-align: left; margin-left: .6rem;">
+                    <strong>Approve requests</strong><br>
+                    <small style="color: var(--text-muted); font-weight: normal;">Review parent bookings</small>
+                </span>
             </a>
             <a href="<?= url('admin/hospitals.php?action=add'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;">&#10010;</span>
-                <div style="text-align: left; margin-left: 0.5rem;">
-                    <strong>Add New Hospital</strong><br>
-                    <small style="color: var(--text-muted); font-weight: normal;">Enroll pediatric center</small>
-                </div>
+                <?= uiIcon('plus', 24); ?>
+                <span style="text-align: left; margin-left: .6rem;">
+                    <strong>Add hospital</strong><br>
+                    <small style="color: var(--text-muted); font-weight: normal;">Enroll a center</small>
+                </span>
             </a>
             <a href="<?= url('admin/vaccines.php?action=add'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;"></span>
-                <div style="text-align: left; margin-left: 0.5rem;">
-                    <strong>Add Vaccine</strong><br>
-                    <small style="color: var(--text-muted); font-weight: normal;">Expand catalog schedule</small>
-                </div>
+                <?= uiIcon('syringe', 24); ?>
+                <span style="text-align: left; margin-left: .6rem;">
+                    <strong>Add vaccine</strong><br>
+                    <small style="color: var(--text-muted); font-weight: normal;">Extend the catalog</small>
+                </span>
             </a>
             <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 1rem;">
-                <span style="font-size: 1.4rem;"></span>
-                <div style="text-align: left; margin-left: 0.5rem;">
-                    <strong>Print Reports</strong><br>
-                    <small style="color: var(--text-muted); font-weight: normal;">Child & date analytics</small>
-                </div>
+                <?= uiIcon('print', 24); ?>
+                <span style="text-align: left; margin-left: .6rem;">
+                    <strong>Print reports</strong><br>
+                    <small style="color: var(--text-muted); font-weight: normal;">By child or date</small>
+                </span>
             </a>
         </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- 3. PENDING PARENT APPOINTMENT REQUESTS (URGENT QUEUE)                   -->
-    <!-- ====================================================================== -->
+    <!-- Pending requests -->
     <div class="card" style="margin-bottom: 2rem;">
         <div class="card-header">
             <div>
-                <h3>Urgent Parent Requests Awaiting Approval</h3>
-                <p style="margin: 0; font-size: 0.85rem;">Once approved, appointment slots are forwarded directly to the hospital queue.</p>
+                <h3>Requests waiting for approval</h3>
+                <p style="margin: 0; font-size: .85rem;">Approved requests go to the hospital's queue.</p>
             </div>
-            <a href="<?= url('admin/requests.php'); ?>" class="btn btn-outline btn-sm">View All (<?= $statPendingRequests; ?>)</a>
+            <a href="<?= url('admin/requests.php'); ?>" class="btn btn-outline btn-sm">View all (<?= $statPendingRequests; ?>)</a>
         </div>
 
         <?php if (empty($recentPending)): ?>
-            <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-                <p style="font-size: 1.1rem; margin-bottom: 0.25rem;">&#10004; All caught up!</p>
-                <small>There are currently no pending appointment requests requiring administrative review.</small>
+            <div class="ui-empty">
+                <span style="color: var(--success);"><?= uiIcon('check', 36); ?></span>
+                <h3>All caught up</h3>
+                <p>No appointment requests need review right now.</p>
             </div>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Child Details</th>
-                            <th>Parent Contact</th>
-                            <th>Requested Center</th>
+                            <th>Child</th>
+                            <th>Parent</th>
+                            <th>Center</th>
                             <th>Vaccine</th>
-                            <th>Preferred Slot</th>
+                            <th>Preferred slot</th>
                             <th style="text-align: right;">Action</th>
                         </tr>
                     </thead>
@@ -282,7 +242,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <tr>
                                 <td>
                                     <strong><?= e($req['child_name']); ?></strong><br>
-                                    <small style="color: var(--text-muted);"><?= formatAge($req['child_dob']); ?> old</small>
+                                    <small style="color: var(--text-muted);"><?= e(formatAge($req['child_dob'])); ?> old</small>
                                 </td>
                                 <td>
                                     <?= e($req['parent_name']); ?><br>
@@ -295,24 +255,22 @@ require_once __DIR__ . '/../includes/header.php';
                                     <small style="color: var(--text-muted);"><?= e($req['time_slot']); ?></small>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
-                                    <!-- Direct Approve Form -->
                                     <form action="<?= url('admin/requests.php'); ?>" method="POST" style="display: inline-block;">
                                         <?= csrfField(); ?>
                                         <input type="hidden" name="booking_id" value="<?= (int)$req['id']; ?>">
                                         <input type="hidden" name="action" value="approve">
-                                        <button type="submit" class="btn btn-success btn-sm" title="Approve & Send to Hospital">
-                                            &#10004; Approve
+                                        <button type="submit" class="btn btn-success btn-sm ui-btn-icon" title="Approve and send to hospital">
+                                            <?= uiIcon('check', 14); ?> Approve
                                         </button>
                                     </form>
 
-                                    <!-- Direct Reject Form -->
-                                    <form action="<?= url('admin/requests.php'); ?>" method="POST" style="display: inline-block; margin-left: 0.25rem;">
+                                    <form action="<?= url('admin/requests.php'); ?>" method="POST" style="display: inline-block; margin-left: .25rem;">
                                         <?= csrfField(); ?>
                                         <input type="hidden" name="booking_id" value="<?= (int)$req['id']; ?>">
                                         <input type="hidden" name="action" value="reject">
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Reject Request" 
-                                                onclick="return confirm('Are you sure you want to reject this appointment request?');">
-                                            &#10006; Reject
+                                        <button type="submit" class="btn btn-danger btn-sm ui-btn-icon" title="Reject request"
+                                                onclick="return confirm('Reject this appointment request?');">
+                                            <?= uiIcon('x', 14); ?> Reject
                                         </button>
                                     </form>
                                 </td>
@@ -324,21 +282,21 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- 4. RECENTLY COMPLETED IMMUNIZATIONS                                   -->
-    <!-- ====================================================================== -->
+    <!-- Recent vaccinations -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h3>Recently Completed Vaccinations</h3>
-                <p style="margin: 0; font-size: 0.85rem;">Official doses verified and recorded by participating pediatric hospitals.</p>
+                <h3>Recent vaccinations</h3>
+                <p style="margin: 0; font-size: .85rem;">Doses recorded by participating hospitals.</p>
             </div>
-            <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline btn-sm">Full Report &rarr;</a>
+            <a href="<?= url('admin/reports.php'); ?>" class="btn btn-outline btn-sm">Full report &rarr;</a>
         </div>
 
         <?php if (empty($recentVaccinated)): ?>
-            <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-                <small>No recent vaccination logs recorded yet.</small>
+            <div class="ui-empty">
+                <?= uiIcon('syringe', 36); ?>
+                <h3>No vaccinations recorded yet</h3>
+                <p>Doses appear here once hospitals mark appointments as vaccinated.</p>
             </div>
         <?php else: ?>
             <div class="table-responsive">
@@ -346,10 +304,10 @@ require_once __DIR__ . '/../includes/header.php';
                     <thead>
                         <tr>
                             <th>Child</th>
-                            <th>Vaccine Administered</th>
-                            <th>Administering Hospital</th>
-                            <th>Vaccinated On</th>
-                            <th>Clinical Remarks</th>
+                            <th>Vaccine</th>
+                            <th>Hospital</th>
+                            <th>Vaccinated on</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>

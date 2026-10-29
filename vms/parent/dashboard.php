@@ -19,6 +19,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/flash.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireRole('parent');
 
@@ -33,7 +34,7 @@ $parentId = $parentProfile ? (int)$parentProfile['id'] : 0;
 
 // If parent record missing, auto-create to ensure uninterrupted access
 if ($parentId === 0) {
-    $createStmt = $pdo->prepare('INSERT INTO parents (user_id, phone, address, created_at) VALUES (?, "Not provided", "Not provided", NOW())');
+    $createStmt = $pdo->prepare('INSERT INTO parents (user_id, phone, address, created_at) VALUES (?, \'Not provided\', \'Not provided\', NOW())');
     $createStmt->execute([$userId]);
     $parentId = (int)$pdo->lastInsertId();
     $_SESSION['profile_id'] = $parentId;
@@ -44,7 +45,7 @@ if ($parentId === 0) {
 // ----------------------------------------------------------------------------
 $cStmt = $pdo->prepare(
     'SELECT c.*,
-            (SELECT COUNT(*) FROM bookings b WHERE b.child_id = c.id AND b.vaccination_status = "vaccinated") AS doses_completed
+            (SELECT COUNT(*) FROM bookings b WHERE b.child_id = c.id AND b.vaccination_status = \'vaccinated\') AS doses_completed
      FROM children c
      WHERE c.parent_id = ?
      ORDER BY c.dob DESC'
@@ -56,7 +57,7 @@ $children = $cStmt->fetchAll();
 // 2. DYNAMIC DUE DATE NOTIFICATIONS ENGINE
 // Computes upcoming & overdue vaccinations from Child DOB + Vaccine Catalog
 // ----------------------------------------------------------------------------
-$vaccinesList = $pdo->query('SELECT * FROM vaccines WHERE status = "available" ORDER BY recommended_age_days ASC')->fetchAll();
+$vaccinesList = $pdo->query('SELECT * FROM vaccines WHERE status = \'available\' ORDER BY recommended_age_days ASC')->fetchAll();
 
 // Fetch all bookings for this parent's children to know completed / booked status
 $bStmt = $pdo->prepare('SELECT child_id, vaccine_id, admin_status, vaccination_status FROM bookings WHERE parent_id = ?');
@@ -65,7 +66,16 @@ $existingBookings = $bStmt->fetchAll();
 
 $bookedMap = [];
 foreach ($existingBookings as $eb) {
+    // Keep only what counts as "handled": vaccinated, or an active (pending/approved) request.
+    // Rejected or missed requests must not hide an overdue vaccine.
+    if ($eb['admin_status'] === 'rejected' || $eb['vaccination_status'] === 'not_vaccinated') {
+        continue;
+    }
     $key = $eb['child_id'] . '_' . $eb['vaccine_id'];
+    if (isset($bookedMap[$key]) && $bookedMap[$key]['vaccination_status'] === 'vaccinated'
+        && $eb['vaccination_status'] !== 'vaccinated') {
+        continue;
+    }
     $bookedMap[$key] = $eb;
 }
 
@@ -82,11 +92,7 @@ foreach ($children as $child) {
 
         // Skip if dose is already vaccinated or booked/in-process
         if (isset($bookedMap[$mapKey])) {
-            $status = $bookedMap[$mapKey]['vaccination_status'];
-            $adminStatus = $bookedMap[$mapKey]['admin_status'];
-            if ($status === 'vaccinated' || ($adminStatus !== 'rejected' && $status === 'pending')) {
-                continue;
-            }
+            continue;
         }
 
         // Calculate due date
@@ -145,11 +151,22 @@ $countVaccinatedDoses = 0;
 foreach ($children as $c) {
     $countVaccinatedDoses += (int)$c['doses_completed'];
 }
-$countPendingApproval = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE parent_id = ' . $parentId . ' AND admin_status = "pending"')->fetchColumn();
+$pendStmt = $pdo->prepare('SELECT COUNT(*) FROM bookings WHERE parent_id = ? AND admin_status = \'pending\'');
+$pendStmt->execute([$parentId]);
+$countPendingApproval = (int)$pendStmt->fetchColumn();
+
+// Group alerts per child so a child with many overdue vaccines does not flood the page.
+$overdueByChild = [];
+foreach ($overdueAlerts as $oa) {
+    $overdueByChild[$oa['child_id']][] = $oa;
+}
+$upcomingShown = array_slice($upcomingAlerts, 0, 4);
+$upcomingHidden = max(0, count($upcomingAlerts) - count($upcomingShown));
 
 $pageTitle = 'Parent Dashboard';
 $pageDescription = 'Child immunization milestones, upcoming vaccine alerts, and appointment status.';
 require_once __DIR__ . '/../includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
@@ -166,7 +183,7 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             <a href="<?= url('parent/book.php'); ?>" class="btn btn-primary">
-                &#10010; Book Vaccine Slot
+                <?= uiIcon('plus', 16); ?> Book Vaccine Slot
             </a>
             <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-outline">
                 Register Child
@@ -178,47 +195,55 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- 1. VACCINATION NOTIFICATIONS & DUE DATE ALERTS                         -->
     <!-- ====================================================================== -->
     <?php if (!empty($overdueAlerts) || !empty($upcomingAlerts)): ?>
-        <div style="margin-bottom: 2rem;">
-            <!-- Overdue Critical Warnings -->
-            <?php foreach ($overdueAlerts as $oa): ?>
-                <div class="alert alert-danger" style="margin-bottom: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 1.5rem;">&#9888;</span>
+        <section style="margin-bottom: 2rem;" aria-label="Vaccination alerts">
+            <?php foreach ($overdueByChild as $cid => $items):
+                $first = $items[0];
+                $shown = array_slice($items, 0, 3);
+                $more  = count($items) - count($shown);
+            ?>
+                <div class="alert alert-danger" style="margin-bottom: .75rem;">
+                    <div class="ui-alert-row" style="width: 100%;">
                         <div>
-                            <strong>Attention: <?= e($oa['child_name']); ?> is overdue for <?= e($oa['vaccine_name']); ?>!</strong><br>
-                            <span style="font-size: 0.85rem;">
-                                Recommended due date was <strong><?= formatDate($oa['due_date']); ?></strong> (<?= (int)$oa['days_diff']; ?> days ago). Please book an appointment promptly to protect your child.
-                            </span>
+                            <?= uiIcon('alert', 22); ?>
+                            <div>
+                                <strong><?= e($first['child_name']); ?> is overdue for <?= count($items); ?> <?= count($items) === 1 ? 'vaccine' : 'vaccines'; ?></strong>
+                                <small>
+                                    <?php foreach ($shown as $i => $oa): ?><?= $i > 0 ? ', ' : ''; ?><?= e($oa['vaccine_name']); ?> (<?= (int)$oa['days_diff']; ?> <?= (int)$oa['days_diff'] === 1 ? 'day' : 'days'; ?> late)<?php endforeach; ?><?= $more > 0 ? ' and ' . $more . ' more' : ''; ?>.
+                                </small>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <a href="<?= url('parent/book.php?child_id=' . (int)$oa['child_id'] . '&vaccine_id=' . (int)$oa['vaccine_id']); ?>" class="btn btn-danger btn-sm" style="white-space: nowrap;">
-                            Book Now &rarr;
-                        </a>
+                        <div style="display: flex; gap: .5rem; flex-wrap: wrap;">
+                            <a href="<?= url('parent/book.php?child_id=' . (int)$cid . '&vaccine_id=' . (int)$first['vaccine_id']); ?>" class="btn btn-danger btn-sm" style="white-space: nowrap;">Book <?= e($first['vaccine_name']); ?></a>
+                            <a href="<?= url('parent/children.php?action=view&id=' . (int)$cid); ?>" class="btn btn-outline btn-sm" style="white-space: nowrap;">Full schedule</a>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
 
-            <!-- Due Soon Friendly Reminders -->
-            <?php foreach ($upcomingAlerts as $ua): ?>
-                <div class="alert alert-warning" style="margin-bottom: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 1.5rem;"></span>
+            <?php foreach ($upcomingShown as $ua): ?>
+                <div class="alert alert-warning" style="margin-bottom: .75rem;">
+                    <div class="ui-alert-row" style="width: 100%;">
                         <div>
-                            <strong>Upcoming Milestone: <?= e($ua['child_name']); ?> &bull; <?= e($ua['vaccine_name']); ?></strong><br>
-                            <span style="font-size: 0.85rem;">
-                                Due on <strong><?= formatDate($ua['due_date']); ?></strong> (in <?= (int)$ua['days_diff']; ?> <?= (int)$ua['days_diff'] === 1 ? 'day' : 'days'; ?>). Schedule your hospital slot in advance.
-                            </span>
+                            <?= uiIcon('calendar', 22); ?>
+                            <div>
+                                <strong><?= e($ua['child_name']); ?>: <?= e($ua['vaccine_name']); ?></strong>
+                                <small>
+                                    Due <?= formatDate($ua['due_date']); ?>
+                                    (<?= (int)$ua['days_diff'] === 0 ? 'today' : 'in ' . (int)$ua['days_diff'] . ((int)$ua['days_diff'] === 1 ? ' day' : ' days'); ?>).
+                                </small>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <a href="<?= url('parent/book.php?child_id=' . (int)$ua['child_id'] . '&vaccine_id=' . (int)$ua['vaccine_id']); ?>" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                            Schedule Slot &rarr;
-                        </a>
+                        <a href="<?= url('parent/book.php?child_id=' . (int)$ua['child_id'] . '&vaccine_id=' . (int)$ua['vaccine_id']); ?>" class="btn btn-primary btn-sm" style="white-space: nowrap;">Book a slot</a>
                     </div>
                 </div>
             <?php endforeach; ?>
-        </div>
+
+            <?php if ($upcomingHidden > 0): ?>
+                <p style="margin: 0; font-size: .9rem; color: var(--text-muted);">
+                    <?= $upcomingHidden; ?> more due in the next 30 days. <a href="<?= url('parent/children.php'); ?>">See each child's schedule</a>.
+                </p>
+            <?php endif; ?>
+        </section>
     <?php endif; ?>
 
     <!-- ====================================================================== -->
@@ -232,7 +257,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small><a href="<?= url('parent/children.php'); ?>">Manage children &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #e0f2fe; color: #0369a1;">
-                
+                <?= uiIcon('child', 22); ?>
             </div>
         </div>
 
@@ -243,7 +268,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small><a href="<?= url('parent/reports.php'); ?>">View certificates &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #ecfdf5; color: #059669;">
-                &#10004;
+                <?= uiIcon('check', 14); ?>
             </div>
         </div>
 
@@ -254,7 +279,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <small><a href="<?= url('parent/bookings.php'); ?>">View appointments &rarr;</a></small>
             </div>
             <div class="stat-icon" style="background-color: #fef3c7; color: #b45309;">
-                &#9203;
+                <?= uiIcon('clock', 14); ?>
             </div>
         </div>
     </div>
@@ -268,7 +293,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <h3>My Children Profiles</h3>
                 <p style="margin: 0; font-size: 0.85rem;">Registered infants under your guardianship.</p>
             </div>
-            <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-outline btn-sm">&#10010; Add Child</a>
+            <a href="<?= url('parent/children.php?action=add'); ?>" class="btn btn-outline btn-sm"><?= uiIcon('plus', 16); ?> Add Child</a>
         </div>
 
         <?php if (empty($children)): ?>
@@ -282,13 +307,13 @@ require_once __DIR__ . '/../includes/header.php';
                     <div style="background: var(--bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 1.6rem;"></span>
+                                <span class="ui-avatar"><?= uiIcon('child', 22); ?></span>
                                 <div>
                                     <h4 style="margin: 0; font-size: 1.15rem;"><?= e($c['name']); ?></h4>
                                     <small style="color: var(--text-muted);"><?= ucfirst($c['gender']); ?> &bull; Blood Group: <strong><?= e($c['blood_group']); ?></strong></small>
                                 </div>
                             </div>
-                            <span class="badge badge-success">&#10004; <?= (int)$c['doses_completed']; ?> doses taken</span>
+                            <span class="badge badge-success"><?= uiIcon('check', 14); ?> <?= (int)$c['doses_completed']; ?> doses taken</span>
                         </div>
 
                         <p style="font-size: 0.88rem; margin-bottom: 1rem; color: var(--text-muted);">
@@ -303,7 +328,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 View History
                             </a>
                             <a href="<?= url('parent/children.php?action=edit&id=' . (int)$c['id']); ?>" class="btn btn-outline btn-sm">
-                                &#9998; Edit
+                                <?= uiIcon('edit', 16); ?> Edit
                             </a>
                         </div>
                     </div>
@@ -357,21 +382,21 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?php if ($b['admin_status'] === 'approved'): ?>
-                                        <span class="badge badge-success">&#10004; Approved</span>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> Approved</span>
                                     <?php elseif ($b['admin_status'] === 'pending'): ?>
-                                        <span class="badge badge-warning">&#9203; In Review</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> In Review</span>
                                     <?php else: ?>
-                                        <span class="badge badge-danger">&#10006; Rejected</span>
+                                        <span class="badge badge-danger"><?= uiIcon('x', 14); ?> Rejected</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if ($b['vaccination_status'] === 'vaccinated'): ?>
-                                        <span class="badge badge-success">&#10004; Vaccinated</span><br>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> Vaccinated</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($b['vaccinated_on']); ?></small>
                                     <?php elseif ($b['vaccination_status'] === 'not_vaccinated'): ?>
-                                        <span class="badge badge-danger">&#10006; Not Vaccinated</span>
+                                        <span class="badge badge-danger"><?= uiIcon('x', 14); ?> Not Vaccinated</span>
                                     <?php else: ?>
-                                        <span class="badge badge-warning">&#9203; Pending Visit</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> Pending Visit</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

@@ -3,7 +3,7 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: about.php
- * Description: About the Initiative, Healthcare Mission & Vaccine Safety in Pakistan
+ * Description: About the initiative, how the system works, FAQ
  * ============================================================================
  */
 
@@ -13,136 +13,103 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/flash.php';
+require_once __DIR__ . '/includes/ui.php';
 
-$pageTitle = 'About the Initiative | Child Vaccination Management System';
-$pageDescription = 'Learn about our mission to eradicate missed childhood immunizations in Pakistan through digital healthcare coordination.';
+$pageTitle = 'About | Child Vaccination Management System';
+$pageDescription = 'Learn how VMS helps parents in Pakistan track childhood immunizations and book vaccination slots.';
 require_once __DIR__ . '/includes/header.php';
+uiStyles();
 ?>
 
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
-    <!-- Page Header Banner -->
-    <div style="text-align: center; max-width: 800px; margin: 0 auto 3rem;">
-        <span class="badge badge-info" style="margin-bottom: 0.5rem;">Our Healthcare Mission</span>
-        <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Transforming Child Immunization Delivery</h1>
-        <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6;">
-            A modern public health platform designed to eliminate missed vaccinations across Pakistan, bridge families with licensed pediatric facilities, and provide real-time immunization tracking.
-        </p>
-    </div>
 
-    <!-- The Problem & Solution Grid -->
-    <div class="grid grid-2" style="gap: 2rem; margin-bottom: 3.5rem;">
-        <div class="card" style="border-left: 5px solid var(--danger);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <span style="font-size: 2rem; color: var(--danger);">&#9888;</span>
-                <h3 style="margin: 0;">The Problem: Fragmented Manual Records</h3>
-            </div>
-            <p style="color: var(--text-muted); line-height: 1.6;">
-                Historically, childhood vaccination tracking in Pakistan relied on manual paper cards and school-based collection drives. Busy parents frequently misplaced paper booklets, leading to skipped booster doses, delayed immunizations, and preventable disease outbreaks.
+    <?php uiPageHeader(
+        'Making sure no child misses a vaccine',
+        'VMS gives parents one place to track immunization dates, find a vaccination center, and keep a printable record.',
+        'About VMS'
+    ); ?>
+
+    <div class="ui-split" style="margin-bottom: 3.5rem;">
+        <div class="card is-bad">
+            <h3 style="color: var(--danger);"><?= uiIcon('alert', 26); ?> <span style="color: var(--text-main);">The problem: paper cards get lost</span></h3>
+            <p>
+                Vaccination records in Pakistan are mostly kept on paper cards. When a card is lost or a clinic changes, parents are left guessing which doses were given, and boosters get delayed or skipped.
             </p>
-            <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Furthermore, clinics had no unified method to forecast local vaccine demand or verify whether a visiting child had already received specific doses elsewhere.
+            <p style="margin: 0;">
+                Clinics also have no shared view of what a child has already received elsewhere.
             </p>
         </div>
 
-        <div class="card" style="border-left: 5px solid var(--success);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <span style="font-size: 2rem; color: var(--success);">&#10004;</span>
-                <h3 style="margin: 0;">The Solution: Centralized Digital Coordination</h3>
-            </div>
-            <p style="color: var(--text-muted); line-height: 1.6;">
-                The <strong>Vaccination Management System (VMS)</strong> establishes a single source of truth aligned with the Expanded Programme on Immunization (EPI) guidelines. As soon as a parent registers their child's Date of Birth, our automated engine computes the exact recommended milestones.
+        <div class="card is-ok">
+            <h3 style="color: var(--success);"><?= uiIcon('shield', 26); ?> <span style="color: var(--text-main);">The solution: one digital record</span></h3>
+            <p>
+                Once a parent enters a child's date of birth, VMS calculates every due date from the EPI-based schedule in the vaccine catalog.
             </p>
-            <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Parents can discover nearby centers with confirmed vaccine stock, submit appointment requests, and download tamper-evident digital immunization certificates for school admissions and records.
+            <p style="margin: 0;">
+                Parents can find centers that stock a vaccine, request an appointment, and print an immunization health card for school or daycare admission.
             </p>
         </div>
     </div>
 
-    <!-- Platform Pillars -->
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 2rem;">How Our Ecosystem Works</h2>
-        <p style="color: var(--text-muted);">A collaborative tripartite architecture uniting parents, medical facilities, and administrators.</p>
+    <div class="ui-center" style="margin-bottom: 1.75rem;">
+        <h2 style="font-size: 1.75rem; margin-bottom: .4rem;">How it works for each user</h2>
+        <p style="color: var(--text-muted); margin: 0;">Three roles share one system: parents, vaccination centers, and administrators.</p>
     </div>
 
-    <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 4rem;">
-        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary-dark); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
-                
-            </div>
-            <h3>For Parents</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Maintain complete profiles for all children, receive automated dashboard notifications for overdue and upcoming doses, search nearby hospitals, and download verified certificates anytime.
-            </p>
+    <div class="ui-roles" style="margin-bottom: 4rem;">
+        <div class="card ui-role">
+            <div class="ui-hero-icon is-brand"><?= uiIcon('users', 26); ?></div>
+            <h3>Parents</h3>
+            <p>Add each child, see overdue and upcoming doses on the dashboard, request appointments, and print the health card at any time.</p>
         </div>
 
-        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--teal-dark); color: var(--teal-dark); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
-                
-            </div>
-            <h3>For Pediatric Centers</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Access daily patient queues approved by health administrators, log verified dose administrations, record clinical observations, and manage local vaccine inventory availability.
-            </p>
+        <div class="card ui-role">
+            <div class="ui-hero-icon is-ok"><?= uiIcon('hospital', 26); ?></div>
+            <h3>Vaccination centers</h3>
+            <p>See the approved patient queue, record each dose given with clinical remarks, and keep vaccine availability up to date.</p>
         </div>
 
-        <div class="card" style="text-align: center; padding: 2rem 1.5rem;">
-            <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--danger); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1.25rem;">
-                &#9878;
-            </div>
-            <h3>For Administration</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
-                Review and moderate parent booking requests, oversee participating healthcare centers, manage the national vaccine catalog schedule, and generate comprehensive compliance reports.
-            </p>
+        <div class="card ui-role">
+            <div class="ui-hero-icon is-bad"><?= uiIcon('scale', 26); ?></div>
+            <h3>Administrators</h3>
+            <p>Review appointment requests, manage participating centers, maintain the vaccine catalog, and view reports.</p>
         </div>
     </div>
 
-    <!-- Frequently Asked Questions -->
-    <div style="max-width: 800px; margin: 0 auto 3rem;">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h2 style="font-size: 1.8rem;">Frequently Asked Questions</h2>
-        </div>
+    <section class="ui-faq" aria-labelledby="faq-title">
+        <h2 id="faq-title" class="ui-center" style="font-size: 1.6rem; margin-bottom: 1.5rem;">Frequently asked questions</h2>
 
-        <div class="card" style="margin-bottom: 1rem;">
-            <h4>How are vaccination due dates calculated?</h4>
-            <p style="margin: 0; font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
-                Due dates are calculated by our engine by taking the child's recorded Date of Birth (DOB) and adding the recommended age in days for each milestone (e.g. BCG at birth, Polio and Pentavalent at 42 days/6 weeks, MMR at 270 days/9 months).
-            </p>
-        </div>
+        <details>
+            <summary>How are due dates calculated?</summary>
+            <p>VMS takes the child's date of birth and adds the recommended age in days for each vaccine. For example, BCG is due at birth, Polio and Pentavalent at 42 days (6 weeks), and Measles at 270 days (9 months).</p>
+        </details>
 
-        <div class="card" style="margin-bottom: 1rem;">
-            <h4>Why do appointment requests require administrative approval?</h4>
-            <p style="margin: 0; font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
-                Administrative moderation ensures that the requested vaccine matches the child's age profile and confirms that the chosen clinic has sufficient medical staff and supply before the patient arrives.
-            </p>
-        </div>
+        <details>
+            <summary>Why does an appointment need admin approval?</summary>
+            <p>The administrator checks that the vaccine suits the child's age and that the chosen center can take the appointment before the family travels there.</p>
+        </details>
 
-        <div class="card" style="margin-bottom: 2rem;">
-            <h4>Can I print my child's official immunization certificate?</h4>
-            <p style="margin: 0; font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
-                Yes! From the parent portal under Reports, you can print an official, formatted Child Immunization Health Card that includes certified dates, clinic stamps, and attending physician signature lines for school or daycare admissions.
-            </p>
-        </div>
+        <details>
+            <summary>Can I print my child's immunization record?</summary>
+            <p>Yes. Open Reports in the parent portal and choose Print. The health card lists every recorded dose with the center, date, and space for a stamp and signature.</p>
+        </details>
 
-        <!-- Actionable Call to Action -->
-        <div class="card" style="text-align: center; padding: 2rem; background: var(--bg-subtle); border: 2px solid var(--border-color);">
-            <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Take the Next Step for Your Child's Health</h3>
-            <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Join thousands of families in Pakistan keeping their immunization records up to date.
-            </p>
-            <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
-                <?php if (isLoggedIn()): ?>
-                    <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary">
-                        Open Portal Dashboard &rarr;
-                    </a>
-                <?php else: ?>
-                    <a href="<?= url('register.php'); ?>" class="btn btn-primary">
-                        Register Child Profile
-                    </a>
-                    <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline">
-                        Browse Clinics in Pakistan
-                    </a>
-                <?php endif; ?>
-            </div>
+        <details>
+            <summary>What if my appointment is rejected or I miss it?</summary>
+            <p>Open My Appointments, check the admin's note, and book the same vaccine again with a new date.</p>
+        </details>
+    </section>
+
+    <div class="card ui-cta" style="max-width: 780px; margin: 0 auto;">
+        <h3 style="font-size: 1.35rem; margin-bottom: .4rem;">Start tracking your child's vaccines</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.4rem;">Create a free parent account, add your child, and see the full schedule in a minute.</p>
+        <div class="ui-btn-row">
+            <?php if (isLoggedIn()): ?>
+                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-primary ui-btn-icon">Open dashboard <?= uiIcon('arrow', 16); ?></a>
+            <?php else: ?>
+                <a href="<?= url('register.php'); ?>" class="btn btn-primary">Create parent account</a>
+                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline">Browse vaccination centers</a>
+            <?php endif; ?>
         </div>
     </div>
 </div>

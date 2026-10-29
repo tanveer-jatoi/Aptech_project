@@ -3,7 +3,7 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: index.php
- * Description: Public Homepage & Healthcare Immunization Landing Portal
+ * Description: Public homepage
  * ============================================================================
  */
 
@@ -13,98 +13,95 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/flash.php';
+require_once __DIR__ . '/includes/ui.php';
 require_once __DIR__ . '/includes/components/count_up.php';
 require_once __DIR__ . '/includes/components/cards_grid.php';
 
 $pdo = getDBConnection();
 
-// Fetch Live Database Metrics for Count-Up Animation
+// Live counts and featured vaccines. A database problem must not take the whole homepage down.
+$statHospitals = $statChildren = $statCompleted = 0;
+$featuredVaccines = [];
+
 try {
-    $statHospitals = (int)$pdo->query('SELECT COUNT(*) FROM hospitals WHERE status = "active"')->fetchColumn();
+    $statHospitals = (int)$pdo->query('SELECT COUNT(*) FROM hospitals WHERE status = \'active\'')->fetchColumn();
     $statChildren  = (int)$pdo->query('SELECT COUNT(*) FROM children')->fetchColumn();
-    $statCompleted = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE vaccination_status = "vaccinated"')->fetchColumn();
-} catch (PDOException $e) {
-    error_log('[HOMEPAGE STATS ERROR] ' . $e->getMessage());
-    $statHospitals = $statChildren = $statCompleted = 0;
+    $statCompleted = (int)$pdo->query('SELECT COUNT(*) FROM bookings WHERE vaccination_status = \'vaccinated\'')->fetchColumn();
+
+    $featuredVaccines = $pdo->query(
+        'SELECT * FROM vaccines WHERE status = \'available\' ORDER BY recommended_age_days ASC LIMIT 6'
+    )->fetchAll();
+} catch (PDOException $ex) {
+    error_log('[VMS HOMEPAGE ERROR] ' . $ex->getMessage());
 }
 
-// Fetch Featured Vaccines
-$vacStmt = $pdo->query('SELECT * FROM vaccines WHERE status = "available" ORDER BY recommended_age_days ASC LIMIT 6');
-$featuredVaccines = $vacStmt->fetchAll();
-
 $pageTitle = 'Child Vaccination Management System Pakistan';
-$pageDescription = 'Protecting child health across Pakistan through automated vaccination schedules, hospital booking, and verified records.';
+$pageDescription = 'Track childhood vaccinations, find a vaccination center, and keep a printable immunization record.';
 require_once __DIR__ . '/includes/header.php';
+uiStyles();
 ?>
 
-<!-- 1. HERO SECTION -->
-<?php require_once __DIR__ . '/includes/components/hero.php'; ?>
+<!-- 1. Hero -->
+<?php include __DIR__ . '/includes/components/hero.php'; ?>
 
-<!-- 2. REAL DATABASE COUNT-UP STATISTICS -->
-<section style="background: #ffffff; border-bottom: 1px solid var(--border-color); padding: 2.5rem 0;" aria-label="National System Statistics">
+<!-- 2. Live platform numbers -->
+<section class="ui-stats" aria-label="Platform statistics">
     <div class="container">
-        <div style="text-align: center; margin-bottom: 1.75rem;">
-            <span class="badge badge-info" style="margin-bottom: 0.35rem;">Live Healthcare Impact</span>
-            <h2 style="font-size: 1.5rem; margin: 0;">Verified National Immunization Metrics</h2>
+        <div class="ui-center" style="margin-bottom: 1.75rem;">
+            <h2 style="font-size: 1.5rem; margin: 0;">VMS in numbers</h2>
         </div>
 
         <div class="grid grid-3" style="gap: 1.5rem;">
-            <?php count_up($statHospitals, 'Participating Hospitals', '', 'Active accredited pediatric centers'); ?>
-            <?php count_up($statChildren, 'Children Protected', '', 'Registered on national schedule'); ?>
-            <?php count_up($statCompleted, 'Vaccinations Completed', '', 'Clinical doses administered &amp; verified'); ?>
+            <?php count_up($statHospitals, 'Participating hospitals', '', 'Active centers in the network'); ?>
+            <?php count_up($statChildren, 'Children registered', '', 'Profiles with a vaccination schedule'); ?>
+            <?php count_up($statCompleted, 'Vaccinations recorded', '', 'Doses confirmed by a center'); ?>
         </div>
     </div>
 </section>
 
-<!-- 3. PROCESS STEPS SECTION -->
+<!-- 3. How it works -->
 <div class="container" style="padding-top: 3.5rem; padding-bottom: 3.5rem;">
-    <?php require_once __DIR__ . '/includes/components/process_steps.php'; ?>
+    <?php include __DIR__ . '/includes/components/process_steps.php'; ?>
 </div>
 
-<!-- 4. FEATURED VACCINE CATALOG SECTION -->
-<section style="background: var(--bg-subtle); padding: 3.5rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);" aria-label="Recommended Vaccines">
+<!-- 4. Featured vaccines -->
+<section class="ui-section-muted" aria-label="Recommended vaccines">
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div class="ui-section-head">
             <div>
-                <span class="badge badge-info" style="margin-bottom: 0.5rem;">Recommended Schedule</span>
-                <h2 style="font-size: 1.75rem; margin: 0;">Essential Childhood Vaccines</h2>
-                <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem;">Key immunizations recommended by pediatric health authorities in Pakistan from birth onward.</p>
+                <span class="badge badge-info">Recommended schedule</span>
+                <h2>Essential childhood vaccines</h2>
+                <p>The first immunizations a child needs, from birth onward.</p>
             </div>
-            <a href="<?= url('vaccines.php'); ?>" class="btn btn-outline">
-                View Full Vaccine Catalog &rarr;
-            </a>
+            <a href="<?= url('vaccines.php'); ?>" class="btn btn-outline ui-btn-icon">Full vaccine catalog <?= uiIcon('arrow', 16); ?></a>
         </div>
 
-        <?php renderVaccinesGrid($featuredVaccines, false); ?>
+        <?php if (!empty($featuredVaccines)): ?>
+            <?php renderVaccinesGrid($featuredVaccines, false); ?>
+        <?php else: ?>
+            <div class="card ui-empty" style="background: #fff;">
+                <p style="margin: 0;">The vaccine list is not available right now. Please check back soon.</p>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
-<!-- 5. VERIFIED PARENT FEEDBACK / HEALTHCARE ASSURANCE -->
+<!-- 5. Parent feedback component (see note: label it as sample feedback if the text is hard-coded) -->
 <div class="container" style="padding-top: 3.5rem; padding-bottom: 2.5rem;">
-    <?php require_once __DIR__ . '/includes/components/review_shuffle.php'; ?>
+    <?php include __DIR__ . '/includes/components/review_shuffle.php'; ?>
 </div>
 
-<!-- 6. CALL TO ACTION BANNER (Solid Dark Neutral, Outlined Accessible Buttons, Strictly Zero Gradients) -->
-<section style="background-color: #0f172a; color: #ffffff; padding: 4rem 1rem; text-align: center; margin-top: 2rem; border-top: 1px solid #1e293b;" aria-label="Call to Action">
+<!-- 6. Call to action -->
+<section class="ui-cta-dark" aria-label="Get started">
     <div class="container">
-        <h2 style="color: #ffffff; font-size: 2.2rem; margin-bottom: 1rem;">
-            Never Miss Another Child Vaccination Date
-        </h2>
-        <p style="max-width: 650px; margin: 0 auto 2rem; color: #cbd5e1; font-size: 1.05rem; line-height: 1.6;">
-            Create your parent profile today, add your newborn or toddler, and let our automated immunization engine keep your family safe and up to date.
-        </p>
-        <div style="display: flex; justify-content: center; gap: 0.85rem; flex-wrap: wrap;">
+        <h2>Never miss a vaccination date</h2>
+        <p>Create a parent profile, add your child, and VMS works out every due date for you.</p>
+        <div class="ui-btn-row">
             <?php if (isLoggedIn()): ?>
-                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-outline-light" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
-                    Go to Your Portal Dashboard &rarr;
-                </a>
+                <a href="<?= url(currentRole() . '/dashboard.php'); ?>" class="btn btn-outline-light" style="padding: .85rem 1.75rem;">Go to your dashboard</a>
             <?php else: ?>
-                <a href="<?= url('register.php'); ?>" class="btn btn-outline-light" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
-                    Create Free Parent Account
-                </a>
-                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 1rem; color: #cbd5e1; border-color: #475569;">
-                    Browse Vaccination Centers
-                </a>
+                <a href="<?= url('register.php'); ?>" class="btn btn-outline-light" style="padding: .85rem 1.75rem;">Create a free parent account</a>
+                <a href="<?= url('hospitals.php'); ?>" class="btn btn-outline" style="padding: .85rem 1.5rem; color: #e2e8f0; border-color: #64748b;">Browse vaccination centers</a>
             <?php endif; ?>
         </div>
     </div>

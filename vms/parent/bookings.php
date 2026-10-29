@@ -18,6 +18,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/flash.php';
+require_once __DIR__ . '/../includes/ui.php';
 
 requireRole('parent');
 
@@ -44,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($bookingId > 0) {
         try {
             // Strictly check ownership and ensure request is still pending
-            $stmt = $pdo->prepare('DELETE FROM bookings WHERE id = ? AND parent_id = ? AND admin_status = "pending"');
+            $stmt = $pdo->prepare('DELETE FROM bookings WHERE id = ? AND parent_id = ? AND admin_status = \'pending\' AND vaccination_status = \'pending\'');
             $stmt->execute([$bookingId, $parentId]);
 
             if ($stmt->rowCount() > 0) {
@@ -82,18 +83,19 @@ $bookings = $stmt->fetchAll();
 $pageTitle = 'My Appointments & Bookings';
 $pageDescription = 'Track approval and vaccination attendance status for your child appointment requests.';
 require_once __DIR__ . '/../includes/header.php';
+uiStyles();
 ?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <h1>My Appointment Requests</h1>
+            <h1>My appointments</h1>
             <p style="margin: 0;">Track the complete lifecycle of your child immunization bookings.</p>
         </div>
 
         <div>
             <a href="<?= url('parent/book.php'); ?>" class="btn btn-primary">
-                &#10010; Book New Appointment
+                <?= uiIcon('plus', 16); ?> Book New Appointment
             </a>
         </div>
     </div>
@@ -101,7 +103,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="card">
         <?php if (empty($bookings)): ?>
             <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;"></span>
+                <?= uiIcon('calendar', 40); ?>
                 <h3>No Appointments Booked Yet</h3>
                 <p style="max-width: 450px; margin: 0 auto 1.25rem;">
                     You have not submitted any vaccination requests. Schedule a slot at an authorized pediatric hospital to ensure your child remains protected.
@@ -141,11 +143,11 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?php if ($b['admin_status'] === 'approved'): ?>
-                                        <span class="badge badge-success">&#10004; Approved</span>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> Approved</span>
                                     <?php elseif ($b['admin_status'] === 'pending'): ?>
-                                        <span class="badge badge-warning">&#9203; In Review</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> In Review</span>
                                     <?php else: ?>
-                                        <span class="badge badge-danger">&#10006; Rejected</span>
+                                        <span class="badge badge-danger"><?= uiIcon('x', 14); ?> Rejected</span>
                                     <?php endif; ?>
 
                                     <?php if (!empty($b['remarks'])): ?>
@@ -154,12 +156,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td>
                                     <?php if ($b['vaccination_status'] === 'vaccinated'): ?>
-                                        <span class="badge badge-success">&#10004; Vaccinated</span><br>
+                                        <span class="badge badge-success"><?= uiIcon('check', 14); ?> Vaccinated</span><br>
                                         <small style="color: var(--text-muted);"><?= formatDate($b['vaccinated_on']); ?></small>
                                     <?php elseif ($b['vaccination_status'] === 'not_vaccinated'): ?>
-                                        <span class="badge badge-danger">&#10006; Missed Visit</span>
+                                        <span class="badge badge-danger"><?= uiIcon('x', 14); ?> Missed Visit</span>
                                     <?php else: ?>
-                                        <span class="badge badge-warning">&#9203; Pending Visit</span>
+                                        <span class="badge badge-warning"><?= uiIcon('clock', 14); ?> Pending Visit</span>
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
@@ -176,8 +178,12 @@ require_once __DIR__ . '/../includes/header.php';
                                                 Cancel
                                             </button>
                                         </form>
+                                    <?php elseif ($b['admin_status'] === 'rejected' || $b['vaccination_status'] === 'not_vaccinated'): ?>
+                                        <a href="<?= url('parent/book.php?child_id=' . (int)$b['child_id'] . '&vaccine_id=' . (int)$b['vaccine_id']); ?>" class="btn btn-primary btn-sm">
+                                            Book again
+                                        </a>
                                     <?php else: ?>
-                                        <small style="color: var(--text-muted);">&#10004; Slot Confirmed</small>
+                                        <small style="color: var(--success);"><?= uiIcon('check', 14); ?> Slot confirmed</small>
                                     <?php endif; ?>
                                 </td>
                             </tr>

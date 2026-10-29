@@ -3,7 +3,8 @@
  * ============================================================================
  * Vaccination Management System (VMS) - Aptech eProject
  * File: privacy.php
- * Description: Privacy Policy & Child Healthcare Data Protection Practices
+ * Description: Privacy policy
+ * NOTE: Keep every statement below true for the code you actually ship.
  * ============================================================================
  */
 
@@ -13,96 +14,104 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/flash.php';
+require_once __DIR__ . '/includes/ui.php';
 
-$pageTitle = 'Privacy Policy & Data Practices';
-$pageDescription = 'Learn how VMS Pakistan securely handles parent profiles, child immunization records, and healthcare data.';
+// Fixed date: change it only when the policy text really changes.
+$lastUpdated = '29-10-2026';
+
+$pageTitle = 'Privacy Policy';
+$pageDescription = 'How VMS collects, uses, and protects parent, child, and hospital data.';
 require_once __DIR__ . '/includes/header.php';
+uiStyles();
 ?>
 
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3.5rem;">
-    <!-- Breadcrumbs / Top Indicator -->
-    <div style="margin-bottom: 1.5rem;">
-        <span class="badge badge-info">Privacy &amp; Data Protection</span>
-    </div>
+    <div class="ui-legal">
+        <nav aria-label="On this page">
+            <strong>On this page</strong>
+            <a href="#commitment">1. Our commitment</a>
+            <a href="#collect">2. What we collect</a>
+            <a href="#use">3. How we use it</a>
+            <a href="#security">4. Security</a>
+            <a href="#cookies">5. Cookies</a>
+            <a href="#rights">6. Your rights</a>
+            <a href="#contact">7. Contact</a>
+        </nav>
 
-    <div class="card" style="max-width: 900px; margin: 0 auto; padding: 2.5rem 2rem;">
-        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; color: var(--text-main);">Privacy Policy</h1>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-            Last Updated: <?= date('d-m-Y'); ?> &bull; Region: Pakistan
-        </p>
+        <article class="card">
+            <h1>Privacy Policy</h1>
+            <p class="meta">Last updated: <?= e($lastUpdated); ?> &middot; Region: Pakistan</p>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">1. Commitment to Child Healthcare Privacy</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">
-                At the <strong>Vaccination Management System (VMS)</strong>, protecting the privacy and sensitive health data of children and their guardians is our highest priority. This policy outlines exactly what information we collect, how it is used, how it is secured, and your rights as a parent or healthcare provider.
-            </p>
-        </section>
+            <section id="commitment">
+                <h2>1. Our commitment</h2>
+                <p>
+                    The <strong>Vaccination Management System (VMS)</strong> handles health information about children, so we collect only what is needed to run vaccination schedules and appointments. This page explains what we store, why, and how it is protected.
+                </p>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">2. Information We Collect</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">We collect only the minimum information necessary to safely manage vaccination schedules and appointments:</p>
-            <ul style="margin-left: 1.5rem; line-height: 1.7; color: var(--text-muted);">
-                <li><strong>Parent / Guardian Information:</strong> Full name, contact phone number, email address, residential physical address, and securely hashed account password.</li>
-                <li><strong>Child Profile Records:</strong> Full name, Date of Birth (DOB), biological gender, and blood group.</li>
-                <li><strong>Clinical Immunization Data:</strong> Vaccine doses scheduled and administered, timestamps of administration, administering hospital center, and attending clinician observations.</li>
-                <li><strong>Healthcare Facility Information:</strong> Hospital name, representative name, contact hotline, physical address, city, and declared vaccine inventory stock.</li>
-            </ul>
-        </section>
+            <section id="collect">
+                <h2>2. What we collect</h2>
+                <ul>
+                    <li><strong>Parent or guardian:</strong> name, phone number, email address, home address, and a hashed password.</li>
+                    <li><strong>Child profile:</strong> name, date of birth, gender, and blood group.</li>
+                    <li><strong>Immunization data:</strong> vaccines booked and given, dates, the center that gave them, and clinical remarks.</li>
+                    <li><strong>Hospitals:</strong> center name, phone, city, address, and the vaccines it lists as in stock.</li>
+                    <li><strong>Helpdesk messages:</strong> the name, email, phone (optional), and message you send through the contact form.</li>
+                </ul>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">3. How We Use Your Data</h2>
-            <ul style="margin-left: 1.5rem; line-height: 1.7; color: var(--text-muted);">
-                <li>To calculate dynamic immunization milestone due dates based on the child's DOB and national healthcare schedules.</li>
-                <li>To facilitate appointment booking between parents and accredited vaccination centers.</li>
-                <li>To enable medical personnel to verify child eligibility and record administered doses.</li>
-                <li>To generate printable Child Health &amp; Immunization Certificates for school admissions and records.</li>
-                <li>To prevent fraud, abuse, and brute-force access attempts via security rate limiting.</li>
-            </ul>
-        </section>
+            <section id="use">
+                <h2>3. How we use it</h2>
+                <ul>
+                    <li>To calculate due dates from a child's date of birth and the vaccine catalog.</li>
+                    <li>To let parents request appointments and let approved centers see their queue.</li>
+                    <li>To let centers record the doses they administer.</li>
+                    <li>To produce a printable immunization health card.</li>
+                    <li>To limit repeated sign-in and form attempts (rate limiting).</li>
+                    <li>To answer helpdesk messages.</li>
+                </ul>
+                <p>We do not sell, rent, or trade personal or child data to advertisers or other third parties.</p>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">4. Technical Security &amp; Data Safeguards</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">We enforce multi-layered engineering controls to keep healthcare records confidential and secure:</p>
-            <ul style="margin-left: 1.5rem; line-height: 1.7; color: var(--text-muted);">
-                <li><strong>Cryptographic Password Hashing:</strong> Passwords are never stored in plain text; they are hashed using the strong Bcrypt algorithm (<code>PASSWORD_DEFAULT</code>).</li>
-                <li><strong>Database Isolation &amp; Prepared Statements:</strong> All database queries use PDO prepared statements with parameter binding to prevent SQL Injection. Direct database file access is strictly blocked at server level.</li>
-                <li><strong>Session &amp; Cookie Security:</strong> Session cookies carry <code>HttpOnly</code> (inaccessible to client scripts), <code>SameSite=Lax</code>, and automatic inactivity expiration.</li>
-                <li><strong>Cross-Site Request Forgery (CSRF):</strong> Every state-changing form submission requires a cryptographically generated 64-character token verified on the server.</li>
-                <li><strong>Zero Layout Tracking &amp; No Data Selling:</strong> We never sell, rent, or trade your child's data or personal contact info to advertisers or third parties.</li>
-            </ul>
-        </section>
+            <section id="security">
+                <h2>4. Security</h2>
+                <ul>
+                    <li><strong>Passwords</strong> are never stored as plain text. They are hashed with PHP's <code>password_hash()</code> (bcrypt).</li>
+                    <li><strong>Database queries</strong> use PDO prepared statements to prevent SQL injection.</li>
+                    <li><strong>Forms</strong> that change data carry a CSRF token that the server checks.</li>
+                    <li><strong>Session cookies</strong> are set with the <code>HttpOnly</code> and <code>SameSite=Lax</code> flags.</li>
+                    <li><strong>Server rules</strong> block web access to configuration, SQL, and log files, and the site redirects to HTTPS on live servers.</li>
+                </ul>
+                <p>No system is perfectly secure. If you suspect misuse of your account, change your password and contact us.</p>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">5. Cookie Policy &amp; Analytics</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">
-                Our platform uses strictly necessary cookies solely to maintain your authenticated login session and CSRF security. We provide an accessible Cookie Preferences banner where you can choose between essential-only cookies or allowing privacy-friendly, anonymized page view statistics.
-            </p>
-        </section>
+            <section id="cookies">
+                <h2>5. Cookies</h2>
+                <p>
+                    VMS uses only the cookies it needs to keep you signed in and to protect forms. It does not use advertising or analytics cookies.
+                </p>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">6. Guardian Rights</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">
-                You retain full control over your family's records. From the parent portal, you can view your child's complete immunization timeline, update demographic details, download official records, or request account removal by contacting system administration.
-            </p>
-        </section>
+            <section id="rights">
+                <h2>6. Your rights</h2>
+                <p>
+                    In the parent portal you can view your child's immunization timeline, edit your profile and your child's details, and print the health card. To delete your account, contact the helpdesk.
+                </p>
+            </section>
 
-        <section style="margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.75rem;">7. Privacy Contact &amp; Inquiries</h2>
-            <p style="line-height: 1.6; color: var(--text-muted);">
-                If you have questions about how your child's information is handled, or wish to report a privacy concern, please contact our data coordinator at <a href="mailto:support@vms.health.local" style="font-weight: 600;">support@vms.health.local</a> or submit a message through our <a href="<?= url('contact.php'); ?>" style="font-weight: 600;">Helpdesk Contact Form</a>.
-            </p>
-        </section>
+            <section id="contact">
+                <h2>7. Contact</h2>
+                <p>
+                    Questions or privacy concerns? Email <a href="mailto:support@vms.health.local" style="font-weight: 600;">support@vms.health.local</a> or use the <a href="<?= url('contact.php'); ?>" style="font-weight: 600;">contact form</a>.
+                </p>
+            </section>
 
-        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <a href="<?= url('terms.php'); ?>" class="btn btn-outline btn-sm">
-                &larr; View Terms of Service
-            </a>
-            <a href="<?= url('index.php'); ?>" class="btn btn-primary btn-sm">
-                Return to Homepage
-            </a>
-        </div>
+            <div class="ui-legal-foot">
+                <a href="<?= url('terms.php'); ?>" class="btn btn-outline btn-sm">Terms of Service</a>
+                <a href="<?= url('index.php'); ?>" class="btn btn-primary btn-sm">Back to home</a>
+            </div>
+        </article>
     </div>
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-
